@@ -1387,19 +1387,7 @@
       <span>Context Feed</span>
     </div>
 
-    <div class="nav-section-label">Areas</div>
-    <div class="nav-item" onclick="filterByArea('Work')">
-      <span class="nav-dot" style="background:var(--blue);"></span>
-      <span>Work</span>
-    </div>
-    <div class="nav-item" onclick="filterByArea('Side Project')">
-      <span class="nav-dot" style="background:var(--green);"></span>
-      <span>Side Project</span>
-    </div>
-    <div class="nav-item" onclick="filterByArea('Personal')">
-      <span class="nav-dot" style="background:var(--purple);"></span>
-      <span>Personal</span>
-    </div>
+    <div id="sidebar-areas-container"></div>
 
     <div class="sidebar-divider"></div>
     <div class="nav-item" data-page="review" onclick="navigate('review')">
@@ -2003,7 +1991,14 @@ async function initApp() {
   const emailDisplay = document.getElementById('user-email-display');
   if (emailDisplay && currentUser) emailDisplay.textContent = currentUser.email;
 
+  // Sync global AREAS from saved settings
+  const savedSettings = getSettingsData();
+  AREAS = savedSettings.areas.map(a => a.name);
+  AREA_COLORS = {};
+  savedSettings.areas.forEach(a => { AREA_COLORS[a.name] = a.color; });
+
   initTheme();
+  updateSidebarAreas();
   renderToday();
   checkBackupReminder();
 }
@@ -4099,13 +4094,32 @@ function addNewArea() {
 }
 
 function updateSidebarAreas() {
-  // Rebuild area options in Add Task form
   const settings = getSettingsData();
   const colorMap = {
     'studio': 'var(--red)', 'signal': 'var(--blue)', 'trailhead': 'var(--green)',
     'personal': 'var(--purple)', 'red': 'var(--red)', 'blue': 'var(--blue)',
     'green': 'var(--green)', 'purple': 'var(--purple)', 'orange': 'var(--orange)'
   };
+
+  // Rebuild sidebar area nav items
+  const container = document.getElementById('sidebar-areas-container');
+  if (container) {
+    if (settings.areas.length > 0) {
+      let html = '<div class="nav-section-label">Areas</div>';
+      for (const a of settings.areas) {
+        const dotColor = colorMap[a.color] || '#999';
+        html += `<div class="nav-item" onclick="filterByArea('${escAttr(a.name)}')">
+          <span class="nav-dot" style="background:${dotColor};"></span>
+          <span>${escHtml(a.name)}</span>
+        </div>`;
+      }
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = '';
+    }
+  }
+
+  // Rebuild area options in Add Task form
   const selects = ['task-area', 'context-area', 'idea-area'];
   for (const selId of selects) {
     const sel = document.getElementById(selId);

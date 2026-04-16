@@ -2008,8 +2008,8 @@ async function initApp() {
   if (!storeCache) {
     storeCache = emptyStore();
   }
-  // Only show welcome once — if user has never completed setup
-  if (!storeCache.welcomeDone) {
+  // Only show welcome once — track independently in localStorage
+  if (!storeCache.welcomeDone && !localStorage.getItem('ds-welcome-done')) {
     showWelcome();
   }
 
@@ -2082,6 +2082,7 @@ function startWithDemo() {
     welcomeDone: true
   };
   setStore(store);
+  localStorage.setItem('ds-welcome-done', '1');
   document.getElementById('welcome-modal').classList.remove('show');
   toast('Loaded demo data — explore away!');
   renderToday();
@@ -2091,6 +2092,7 @@ function startFresh() {
   const store = emptyStore();
   store.welcomeDone = true;
   setStore(store);
+  localStorage.setItem('ds-welcome-done', '1');
   document.getElementById('welcome-modal').classList.remove('show');
   toast('Starting fresh — add your first task!');
   renderToday();
@@ -2109,6 +2111,7 @@ function importDataAndClose(event) {
       }
       data.store.welcomeDone = true;
       setStore(data.store);
+      localStorage.setItem('ds-welcome-done', '1');
       if (data.theme) setTheme(data.theme);
       document.getElementById('welcome-modal').classList.remove('show');
       toast(`Imported ${data.store.tasks.length} tasks`);

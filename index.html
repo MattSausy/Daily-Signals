@@ -2351,16 +2351,15 @@ function renderTaskDetail() {
         <select onchange="detailUpdateField('${task.id}','impact',this.value)">${impactOpts}</select>
       </div>
       <div class="task-detail-field">
-        <label>Urgency</label>
-        <select onchange="detailUpdateField('${task.id}','urgency',this.value)">${urgencyOpts}</select>
-      </div>
-      <div class="task-detail-field">
         <label>Effort</label>
         <select onchange="detailUpdateField('${task.id}','effort',this.value)">${effortOpts}</select>
       </div>
       <div class="task-detail-field">
         <label>Due Date</label>
-        <input type="date" value="${task.due || ''}" onchange="detailUpdateField('${task.id}','due',this.value)">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="date" value="${task.due || ''}" onchange="detailUpdateField('${task.id}','due',this.value)" style="flex:1;">
+          ${task.due ? `<span onclick="detailUpdateField('${task.id}','due','');renderTaskDetail();" style="cursor:pointer;color:var(--text-secondary);font-size:14px;" title="Clear date">✕</span>` : ''}
+        </div>
       </div>
       <div class="task-detail-field">
         <label>Category</label>
@@ -2648,16 +2647,15 @@ function renderCleanTaskRow(task) {
             <select class="inline-edit-select" onchange="inlineUpdateField('${task.id}','impact',this.value)" onclick="event.stopPropagation()">${impactOpts}</select>
           </div>
           <div class="inline-edit-field">
-            <div class="expand-detail-label">Urgency</div>
-            <select class="inline-edit-select" onchange="inlineUpdateField('${task.id}','urgency',this.value)" onclick="event.stopPropagation()">${urgencyOpts}</select>
-          </div>
-          <div class="inline-edit-field">
             <div class="expand-detail-label">Effort</div>
             <select class="inline-edit-select" onchange="inlineUpdateField('${task.id}','effort',this.value)" onclick="event.stopPropagation()">${effortOpts}</select>
           </div>
           <div class="inline-edit-field">
             <div class="expand-detail-label">Due Date</div>
-            <input type="date" class="inline-edit-input" value="${dueVal}" onchange="inlineUpdateField('${task.id}','due',this.value)" onclick="event.stopPropagation()">
+            <div style="display:flex;gap:4px;align-items:center;">
+              <input type="date" class="inline-edit-input" value="${dueVal}" onchange="inlineUpdateField('${task.id}','due',this.value)" onclick="event.stopPropagation()" style="flex:1;">
+              ${dueVal ? `<span onclick="event.stopPropagation();inlineUpdateField('${task.id}','due','');this.parentElement.querySelector('input').value='';" style="cursor:pointer;color:var(--text-secondary);font-size:14px;" title="Clear date">✕</span>` : ''}
+            </div>
           </div>
           <div class="inline-edit-field">
             <div class="expand-detail-label">Category</div>

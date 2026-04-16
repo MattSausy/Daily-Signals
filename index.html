@@ -1413,13 +1413,13 @@
         <span class="nav-icon">📋</span>
         <span>Copy for Claude</span>
       </div>
+      <div class="nav-item" data-page="setup" onclick="navigate('setup')">
+        <span class="nav-icon">🚀</span>
+        <span>Setup Guide</span>
+      </div>
       <div class="nav-item" data-page="settings" onclick="navigate('settings')">
         <span class="nav-icon">⚙</span>
         <span>Settings</span>
-      </div>
-      <div class="nav-item" onclick="resetStore()" style="font-size:11px; color:#666;">
-        <span class="nav-icon" style="font-size:12px;">↻</span>
-        <span>Reset demo data</span>
       </div>
     </div>
   </div>
@@ -1741,6 +1741,17 @@
     </div>
 
     <!-- ════════════════════════════════════ -->
+    <!-- PAGE: SETUP GUIDE -->
+    <!-- ════════════════════════════════════ -->
+    <div class="page" id="page-setup">
+      <div style="max-width:600px;">
+        <div class="page-title">Setup Guide</div>
+        <div class="page-subtitle">Get the most out of Daily Signals in a few quick steps.</div>
+        <div id="setup-checklist"></div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════ -->
     <!-- PAGE: SETTINGS -->
     <!-- ════════════════════════════════════ -->
     <div class="page" id="page-settings">
@@ -1789,13 +1800,16 @@
         <div style="margin:28px 0 8px;"><div class="section-label">Data</div></div>
 
         <div class="settings-card" id="asana-import-card">
-          <div class="settings-card-title">Import Asana Tasks</div>
+          <div class="settings-card-title">Import from Asana</div>
           <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
-            Merge tasks from your Asana export into Daily Signals.<br>
+            Export a CSV from Asana, then upload it here.<br>
             Duplicates are skipped — nothing gets wiped.
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <button class="btn btn-primary btn-sm" onclick="importAsanaTasks()">Import Asana Tasks</button>
+            <label class="btn btn-primary btn-sm" style="cursor:pointer;">
+              Upload Asana CSV
+              <input type="file" accept=".csv" onchange="importAsanaCSV(event)" style="display:none;">
+            </label>
             <span id="asana-import-status" style="font-size:11px; color:var(--text-secondary);"></span>
           </div>
         </div>
@@ -1819,7 +1833,6 @@
         <div class="settings-card" style="border-color:var(--red); border-style:dashed;">
           <div class="settings-card-title" style="color:var(--red);">Danger Zone</div>
           <div style="display:flex; gap:8px;">
-            <button class="btn btn-danger btn-sm" onclick="resetStore()">Reset to Demo Data</button>
             <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear All Data</button>
           </div>
         </div>
@@ -1859,29 +1872,7 @@
 <!-- FAB -->
 <button class="fab" onclick="navigate('add')" title="Add Task">+</button>
 
-<!-- Welcome Modal (first run) -->
-<div class="modal-overlay" id="welcome-modal">
-  <div class="modal" style="text-align:center; max-width:440px;">
-    <div style="font-size:36px; margin-bottom:8px;">⚡</div>
-    <div class="modal-title" style="text-align:center;">Welcome to Daily Signals</div>
-    <p style="font-size:14px; color:var(--text-secondary); margin-bottom:20px;">Your AI-powered task prioritizer. How would you like to start?</p>
-    <div style="display:flex; flex-direction:column; gap:10px;">
-      <button class="assign-option" onclick="startWithDemo()">
-        <span class="assign-option-icon">📋</span>
-        <div style="text-align:left;"><div class="assign-option-text">Start with Demo Data</div><div class="assign-option-sub">15 sample tasks so you can explore the features</div></div>
-      </button>
-      <button class="assign-option" onclick="startFresh()">
-        <span class="assign-option-icon">✨</span>
-        <div style="text-align:left;"><div class="assign-option-text">Start Fresh</div><div class="assign-option-sub">Empty workspace — add your own tasks from scratch</div></div>
-      </button>
-      <label class="assign-option" style="cursor:pointer;">
-        <span class="assign-option-icon">↑</span>
-        <div style="text-align:left;"><div class="assign-option-text">Import Backup</div><div class="assign-option-sub">Restore from a previous export file</div></div>
-        <input type="file" accept=".json" onchange="importDataAndClose(event)" style="display:none;">
-      </label>
-    </div>
-  </div>
-</div>
+<!-- Welcome modal removed — users start with empty workspace -->
 
 <!-- Auth Screen -->
 <div id="auth-screen" class="auth-screen">
@@ -2008,10 +1999,6 @@ async function initApp() {
   if (!storeCache) {
     storeCache = emptyStore();
   }
-  // Only show welcome once — track independently in localStorage
-  if (!storeCache.welcomeDone && !localStorage.getItem('ds-welcome-done')) {
-    showWelcome();
-  }
 
   const emailDisplay = document.getElementById('user-email-display');
   if (emailDisplay && currentUser) emailDisplay.textContent = currentUser.email;
@@ -2063,71 +2050,6 @@ function emptyStore() {
   return { tasks: [], ideas: [], context: [], archived: [], completedLog: [], dailySchedule: {}, streakData: { current: 0, best: 0, lastActiveDate: null } };
 }
 
-function showWelcome() {
-  setTimeout(() => {
-    const modal = document.getElementById('welcome-modal');
-    if (modal) modal.classList.add('show');
-  }, 100);
-}
-
-function startWithDemo() {
-  const store = {
-    tasks: getSeedTasks(),
-    ideas: getSeedIdeas(),
-    context: getSeedContext(),
-    archived: [],
-    completedLog: [],
-    dailySchedule: {},
-    streakData: { current: 0, best: 0, lastActiveDate: null },
-    welcomeDone: true
-  };
-  setStore(store);
-  localStorage.setItem('ds-welcome-done', '1');
-  document.getElementById('welcome-modal').classList.remove('show');
-  toast('Loaded demo data — explore away!');
-  renderToday();
-}
-
-function startFresh() {
-  const store = emptyStore();
-  store.welcomeDone = true;
-  setStore(store);
-  localStorage.setItem('ds-welcome-done', '1');
-  document.getElementById('welcome-modal').classList.remove('show');
-  toast('Starting fresh — add your first task!');
-  renderToday();
-}
-
-function importDataAndClose(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!data.store || !data.store.tasks) {
-        toast('Invalid backup file');
-        return;
-      }
-      data.store.welcomeDone = true;
-      setStore(data.store);
-      localStorage.setItem('ds-welcome-done', '1');
-      if (data.theme) setTheme(data.theme);
-      document.getElementById('welcome-modal').classList.remove('show');
-      toast(`Imported ${data.store.tasks.length} tasks`);
-      renderToday();
-    } catch (err) {
-      toast('Error reading file');
-    }
-  };
-  reader.readAsText(file);
-}
-
-function resetStore() {
-  if (!confirm('Reset all data to demo tasks? This clears everything.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
-}
 
 function setStore(store) {
   storeCache = store;
@@ -2182,51 +2104,6 @@ async function saveStoreToCloud(store) {
   }
 }
 
-function getSeedTasks() {
-  const now = Date.now();
-  const day = 86400000;
-  return [
-    // Work - Operations
-    { id: genId(), name: 'Review quarterly budget and flag overages', area: 'Work', category: 'Operations', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Schedule team standup for next sprint', area: 'Work', category: 'Operations', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 15, due: '', notes: '', description: '', created: now - 3*day, completed: false, pinned: false, recurrence: { type: 'weekly' } },
-    { id: genId(), name: 'Update onboarding docs for new hires', area: 'Work', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 120, due: '', notes: '', description: '', created: now - 5*day, completed: false, pinned: false, recurrence: null },
-    // Work - Marketing
-    { id: genId(), name: 'Draft social media posts for product launch', area: 'Work', category: 'Marketing', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 1*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Review analytics dashboard and prep weekly report', area: 'Work', category: 'Marketing', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 30, due: '', notes: '', description: '', created: now - 4*day, completed: false, pinned: false, recurrence: { type: 'weekly' } },
-    { id: genId(), name: 'Brainstorm email campaign for summer promotion', area: 'Work', category: 'Marketing', impact: 'high', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 6*day, completed: false, pinned: false, recurrence: null },
-    // Work - Sales
-    { id: genId(), name: 'Follow up with 3 warm leads from last week', area: 'Work', category: 'Sales', impact: 'critical', urgency: 'today', effort: 'medium', estMinutes: 45, due: '', notes: '', description: '', created: now - 1*day, completed: false, pinned: true, recurrence: null },
-    { id: genId(), name: 'Prep pitch deck for Friday client meeting', area: 'Work', category: 'Sales', impact: 'high', urgency: 'this_week', effort: 'big', estMinutes: 150, due: '', notes: '', description: '', created: now - 3*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Update CRM with notes from recent calls', area: 'Work', category: 'Sales', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 20, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
-    // Side Project
-    { id: genId(), name: 'Fix mobile layout bug on landing page', area: 'Side Project', category: 'Engineering', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Write blog post about lessons learned so far', area: 'Side Project', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 120, due: '', notes: '', description: '', created: now - 7*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Set up basic analytics tracking', area: 'Side Project', category: 'Engineering', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 10*day, completed: false, pinned: false, recurrence: null },
-    // Personal
-    { id: genId(), name: 'Book dentist appointment', area: 'Personal', category: 'Other', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 10, due: '', notes: '', description: '', created: now - 4*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Research and sign up for online course', area: 'Personal', category: 'Other', impact: 'low', urgency: 'this_month', effort: 'medium', estMinutes: 45, due: '', notes: '', description: '', created: now - 8*day, completed: false, pinned: false, recurrence: null },
-    { id: genId(), name: 'Plan weekend trip with friends', area: 'Personal', category: 'Other', impact: 'low', urgency: 'this_month', effort: 'medium', estMinutes: 30, due: '', notes: '', description: '', created: now - 12*day, completed: false, pinned: false, recurrence: null },
-  ];
-}
-
-function getSeedIdeas() {
-  const now = Date.now();
-  const day = 86400000;
-  return [
-    { id: genId(), text: 'Automate weekly reporting with a simple dashboard', area: 'Work', created: now - 2*day },
-    { id: genId(), text: 'Start a newsletter for the side project to build an audience early', area: 'Side Project', created: now - 5*day },
-    { id: genId(), text: 'Try a morning routine for 30 days — journal, exercise, no phone for first hour', area: 'Personal', created: now - 8*day },
-  ];
-}
-
-function getSeedContext() {
-  const now = Date.now();
-  const day = 86400000;
-  return [
-    { id: genId(), text: 'Q2 goals: grow revenue 15%, launch 2 new features, hire 1 contractor.', area: 'Work', created: now - 1*day, source: 'manual note' },
-    { id: genId(), text: 'Side project has 50 beta users. Goal is 200 by end of summer.', area: 'Side Project', created: now - 3*day, source: 'manual note' },
-  ];
-}
 
 function genId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 
@@ -2439,6 +2316,7 @@ function navigate(page) {
   if (page === 'claude') renderClaudeExport();
   if (page === 'review') renderWeeklyReview();
   if (page === 'settings') renderSettings();
+  if (page === 'setup') renderSetup();
   if (page === 'add') resetAddForm();
 }
 
@@ -4002,6 +3880,101 @@ function initTheme() {
   setTimeout(() => updateThemeToggle(saved || 'light'), 0);
 }
 
+// ═══════════════════════════════════════════════════════════
+// RENDER: SETUP GUIDE
+// ═══════════════════════════════════════════════════════════
+
+function renderSetup() {
+  const store = getStore();
+  const settings = getSettingsData();
+
+  const steps = [
+    {
+      key: 'areas',
+      title: 'Set up your Areas',
+      desc: 'Areas are the big buckets of your life — like "Work", "Side Project", and "Personal". Customize them in Settings to match your world.',
+      done: settings.areas.length > 0 && settings.areas.some(a => a.name !== 'Work'),
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
+    },
+    {
+      key: 'categories',
+      title: 'Add categories to your Areas',
+      desc: 'Categories organize tasks within each Area — things like Marketing, Operations, Engineering, Finance. Add them under each Area in Settings.',
+      done: settings.areas.some(a => (a.categories || []).length > 4),
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
+    },
+    {
+      key: 'firstTask',
+      title: 'Create your first task',
+      desc: 'Use the quick-add bar at the top of Today\'s Focus, or hit the + button to add a detailed task.',
+      done: store.tasks && store.tasks.length > 0,
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('today')">Go to Today's Focus</button>`
+    },
+    {
+      key: 'import',
+      title: 'Import tasks from Asana (optional)',
+      desc: 'Already using Asana? Export your tasks as a CSV, then upload it in Settings under "Import from Asana".',
+      done: store.tasks && store.tasks.length >= 10,
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Import</button>`
+    },
+    {
+      key: 'recurring',
+      title: 'Set up a recurring task',
+      desc: 'Weekly reports, daily standups, monthly reviews — expand any task and set its recurrence to daily, weekly, or monthly.',
+      done: store.tasks && store.tasks.some(t => t.recurrence),
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('today')">Add a recurring task</button>`
+    },
+    {
+      key: 'idea',
+      title: 'Capture an idea',
+      desc: 'Got something that isn\'t a task yet? Drop it in the Ideas section so it doesn\'t get lost.',
+      done: store.ideas && store.ideas.length > 0,
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('ideas')">Go to Ideas</button>`
+    },
+    {
+      key: 'theme',
+      title: 'Pick your theme',
+      desc: 'Light or dark — your call. Find it in Settings under Appearance.',
+      done: true, // always "done" since there's a default
+      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
+    }
+  ];
+
+  const doneCount = steps.filter(s => s.done).length;
+  const pct = Math.round((doneCount / steps.length) * 100);
+
+  let html = `
+    <div style="margin-bottom:24px;">
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-bottom:6px;">
+        <span>${doneCount} of ${steps.length} complete</span>
+        <span>${pct}%</span>
+      </div>
+      <div style="height:6px; background:var(--hover-bg); border-radius:3px; overflow:hidden;">
+        <div style="height:100%; width:${pct}%; background:var(--accent); border-radius:3px; transition:width 0.3s;"></div>
+      </div>
+    </div>
+  `;
+
+  for (const step of steps) {
+    const checkIcon = step.done
+      ? '<span style="color:var(--green); font-size:18px; margin-right:12px;">✓</span>'
+      : '<span style="color:var(--text-secondary); font-size:18px; margin-right:12px; opacity:0.4;">○</span>';
+    const opacity = step.done ? 'opacity:0.6;' : '';
+    html += `
+      <div class="settings-card" style="${opacity} display:flex; align-items:flex-start; gap:0;">
+        <div style="padding-top:2px;">${checkIcon}</div>
+        <div style="flex:1;">
+          <div style="font-weight:600; font-size:14px; margin-bottom:4px;">${step.title}</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">${step.desc}</div>
+          ${step.done ? '' : step.action}
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('setup-checklist').innerHTML = html;
+}
+
 function renderSettings() {
   const settings = getSettingsData();
   const colorMap = {
@@ -4145,38 +4118,149 @@ function updateSidebarAreas() {
 // ASANA IMPORT (MERGE)
 // ═══════════════════════════════════════════════════════════
 
-function importAsanaTasks() {
-  const store = getStore();
-  const seedTasks = getSeedTasks();
-  const seedIdeas = getSeedIdeas();
+function importAsanaCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('asana-import-status');
+  statusEl.textContent = 'Reading file...';
 
-  // Check for duplicates by name to avoid re-importing
-  const existingNames = new Set(store.tasks.map(t => t.name.toLowerCase().trim()));
-  const newTasks = seedTasks.filter(t => !existingNames.has(t.name.toLowerCase().trim()));
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const rows = parseCSV(e.target.result);
+      if (rows.length < 2) {
+        toast('CSV appears empty');
+        statusEl.textContent = 'No data found in CSV.';
+        return;
+      }
+      const headers = rows[0].map(h => h.trim().toLowerCase());
+      const nameIdx = headers.findIndex(h => h === 'name' || h === 'task name');
+      if (nameIdx === -1) {
+        toast('Could not find a "Name" column in this CSV');
+        statusEl.textContent = 'Missing "Name" column — is this an Asana export?';
+        return;
+      }
 
-  const existingIdeas = new Set((store.ideas || []).map(i => i.text.toLowerCase().trim().substring(0, 50)));
-  const newIdeas = seedIdeas.filter(i => !existingIdeas.has(i.text.toLowerCase().trim().substring(0, 50)));
+      const dueDateIdx = headers.findIndex(h => h === 'due date' || h === 'due on');
+      const notesIdx = headers.findIndex(h => h === 'notes' || h === 'description');
+      const sectionIdx = headers.findIndex(h => h === 'section/column' || h === 'section' || h === 'column');
+      const completedIdx = headers.findIndex(h => h === 'completed at' || h === 'completed');
+      const tagsIdx = headers.findIndex(h => h === 'tags');
+      const projectIdx = headers.findIndex(h => h === 'projects' || h === 'project');
+      const assigneeIdx = headers.findIndex(h => h === 'assignee');
 
-  if (newTasks.length === 0 && newIdeas.length === 0) {
-    toast('All Asana tasks already imported!');
-    document.getElementById('asana-import-status').textContent = 'Already imported — no new tasks found.';
-    return;
+      const store = getStore();
+      const existingNames = new Set(store.tasks.map(t => t.name.toLowerCase().trim()));
+
+      const settings = getSettingsData();
+      const defaultArea = settings.areas.length > 0 ? settings.areas[0].name : 'Work';
+
+      let imported = 0;
+      let skipped = 0;
+      const now = Date.now();
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const name = (row[nameIdx] || '').trim();
+        if (!name) continue;
+
+        // Skip completed tasks
+        if (completedIdx !== -1 && row[completedIdx] && row[completedIdx].trim()) {
+          skipped++;
+          continue;
+        }
+
+        // Skip duplicates
+        if (existingNames.has(name.toLowerCase())) {
+          skipped++;
+          continue;
+        }
+
+        const due = dueDateIdx !== -1 ? (row[dueDateIdx] || '').trim() : '';
+        const notes = notesIdx !== -1 ? (row[notesIdx] || '').trim() : '';
+        const section = sectionIdx !== -1 ? (row[sectionIdx] || '').trim() : '';
+        const tags = tagsIdx !== -1 ? (row[tagsIdx] || '').trim() : '';
+
+        // Map section to category if possible
+        let category = 'Other';
+        if (section) {
+          const sLower = section.toLowerCase();
+          const allCats = settings.areas.flatMap(a => a.categories || []);
+          const match = allCats.find(c => c.toLowerCase() === sLower);
+          if (match) category = match;
+          else category = section; // Use section name as category
+        }
+
+        const task = {
+          id: genId(),
+          name: name,
+          area: defaultArea,
+          category: category,
+          impact: 'medium',
+          urgency: due ? 'this_week' : 'this_month',
+          effort: 'medium',
+          estMinutes: 30,
+          due: due,
+          notes: notes + (tags ? (notes ? '\n' : '') + 'Tags: ' + tags : ''),
+          description: '',
+          created: now - (rows.length - i) * 1000, // stagger creation times
+          completed: false,
+          pinned: false,
+          recurrence: null
+        };
+
+        store.tasks.push(task);
+        existingNames.add(name.toLowerCase());
+        imported++;
+      }
+
+      if (imported === 0) {
+        toast('No new tasks found to import');
+        statusEl.textContent = skipped > 0 ? `Skipped ${skipped} (duplicates or completed).` : 'No tasks found in CSV.';
+      } else {
+        setStore(store);
+        const msg = `Imported ${imported} task${imported !== 1 ? 's' : ''}` + (skipped > 0 ? ` (${skipped} skipped)` : '');
+        toast(msg);
+        statusEl.textContent = msg;
+        if (currentPage === 'today') renderToday();
+        else if (currentPage === 'tasks') renderAllTasks();
+      }
+    } catch (err) {
+      console.error('Asana import error:', err);
+      toast('Error reading CSV file');
+      statusEl.textContent = 'Error: ' + err.message;
+    }
+  };
+  reader.readAsText(file);
+  // Reset file input so same file can be re-selected
+  event.target.value = '';
+}
+
+// Simple CSV parser that handles quoted fields
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQuotes = false; }
+      else { field += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+        row.push(field); field = '';
+        if (row.some(f => f.trim())) rows.push(row);
+        row = [];
+        if (ch === '\r') i++;
+      } else { field += ch; }
+    }
   }
-
-  store.tasks = store.tasks.concat(newTasks);
-  store.ideas = (store.ideas || []).concat(newIdeas);
-  setStore(store);
-
-  const parts = [];
-  if (newTasks.length > 0) parts.push(newTasks.length + ' tasks');
-  if (newIdeas.length > 0) parts.push(newIdeas.length + ' ideas');
-  const msg = 'Imported ' + parts.join(' and ') + ' from Asana!';
-  toast(msg);
-  document.getElementById('asana-import-status').textContent = msg;
-
-  // Refresh current view
-  if (currentView === 'today') renderToday();
-  else if (currentView === 'tasks') renderAllTasks();
+  if (field || row.length > 0) { row.push(field); if (row.some(f => f.trim())) rows.push(row); }
+  return rows;
 }
 
 // ═══════════════════════════════════════════════════════════

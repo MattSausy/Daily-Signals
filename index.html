@@ -1788,6 +1788,18 @@
 
         <div style="margin:28px 0 8px;"><div class="section-label">Data</div></div>
 
+        <div class="settings-card" id="asana-import-card">
+          <div class="settings-card-title">Import Asana Tasks</div>
+          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
+            Merge tasks from your Asana export into Daily Signals.<br>
+            Duplicates are skipped — nothing gets wiped.
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="importAsanaTasks()">Import Asana Tasks</button>
+            <span id="asana-import-status" style="font-size:11px; color:var(--text-secondary);"></span>
+          </div>
+        </div>
+
         <div class="settings-card">
           <div class="settings-card-title">Backup & Restore</div>
           <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
@@ -4001,9 +4013,9 @@ function renderSettings() {
 
     html += `
       <div class="settings-card">
-        <div class="settings-card-title">
-          <span class="area-color-dot" style="background:${dotColor};"></span>
-          ${escHtml(area.name)}
+        <div class="settings-card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          <span><span class="area-color-dot" style="background:${dotColor};"></span>${escHtml(area.name)}</span>
+          <button class="btn btn-sm" onclick="removeArea(${i})" style="font-size:10px;color:var(--red);border-color:var(--red);padding:2px 8px;" title="Remove area">Remove</button>
         </div>
         <div style="margin-bottom:8px;">${catsHtml || '<span style="font-size:12px;color:#aaa;">No categories yet</span>'}</div>
         <div class="add-category-row">
@@ -4044,6 +4056,34 @@ function removeCategoryFromArea(areaIdx, catName) {
   setStore(store);
   renderSettings();
   toast(`Removed "${catName}"`);
+}
+
+function removeArea(areaIdx) {
+  const settings = getSettingsData();
+  const area = settings.areas[areaIdx];
+  if (!area) return;
+
+  const store = getStore();
+  const tasksInArea = store.tasks.filter(t => t.area === area.name).length;
+
+  let msg = `Remove "${area.name}" area?`;
+  if (tasksInArea > 0) {
+    msg += ` (${tasksInArea} task${tasksInArea > 1 ? 's' : ''} will keep their current area label)`;
+  }
+  if (!confirm(msg)) return;
+
+  settings.areas.splice(areaIdx, 1);
+
+  // Update globals
+  AREAS = settings.areas.map(a => a.name);
+  AREA_COLORS = {};
+  settings.areas.forEach(a => { AREA_COLORS[a.name] = a.color; });
+
+  store.settings = settings;
+  setStore(store);
+  renderSettings();
+  updateSidebarAreas();
+  toast(`Removed "${area.name}" area`);
 }
 
 function addNewArea() {

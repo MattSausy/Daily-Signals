@@ -666,6 +666,87 @@
   .assign-option-text { font-weight: 600; }
   .assign-option-sub { font-size: 12px; color: var(--text-secondary); }
 
+  /* ═══ TASK DETAIL VIEW ═══ */
+  .task-detail-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    width: 100%;
+    padding: 8px 0;
+    font-family: inherit;
+    color: var(--text);
+    outline: none;
+  }
+  .task-detail-title:focus { border-bottom-color: var(--accent); }
+  .task-detail-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  .task-detail-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .task-detail-field select,
+  .task-detail-field input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+  }
+  .task-detail-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text);
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .task-detail-textarea:focus,
+  .task-detail-field select:focus,
+  .task-detail-field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .task-detail-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin: 24px 0 8px;
+  }
+  .task-detail-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .task-detail-name-link {
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .task-detail-name-link:hover { color: var(--accent); }
+
   /* ═══ CLEAN TASK ROW ═══ */
   .task-row {
     display: flex;
@@ -1385,12 +1466,6 @@
 
     <div id="sidebar-areas-container"></div>
 
-    <div class="sidebar-divider"></div>
-    <div class="nav-item" data-page="review" onclick="navigate('review')">
-      <span class="nav-icon">📊</span>
-      <span>Weekly Review</span>
-    </div>
-
     <div class="sidebar-bottom">
       <div class="sidebar-divider"></div>
       <div class="nav-item" data-page="settings" onclick="navigate('settings')">
@@ -1548,12 +1623,12 @@
 
         <div class="form-group">
           <label class="form-label">Description</label>
-          <textarea class="form-textarea" id="task-description" style="min-height:80px;" placeholder="Detailed description of what needs to be done..."></textarea>
+          <textarea class="form-textarea" id="task-description" style="min-height:100px;" placeholder="What needs to be done, why it matters, any relevant details..."></textarea>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Why It Matters (optional but recommended)</label>
-          <textarea class="form-textarea" id="task-notes" style="min-height:60px;" placeholder='e.g., "If we don't address this before summer dip, we could lose 30+ members."'></textarea>
+          <label class="form-label">Research (optional)</label>
+          <textarea class="form-textarea" id="task-research" style="min-height:80px;" placeholder="Paste findings from Claude, links, data, meeting notes..."></textarea>
         </div>
 
         <!-- Priority promote/demote (shown when editing) -->
@@ -1657,25 +1732,6 @@
     </div>
 
     <!-- ════════════════════════════════════ -->
-    <!-- PAGE: WEEKLY REVIEW -->
-    <!-- ════════════════════════════════════ -->
-    <div class="page" id="page-review">
-      <div style="max-width:700px;">
-        <div class="page-title">Weekly Review</div>
-        <div class="page-subtitle">Clean house. Archive stale tasks. Celebrate wins. Reset for next week.</div>
-
-        <div class="stats-row" id="review-stats"></div>
-
-        <div class="section-label">Stale Tasks — decide their fate</div>
-        <p style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">Tasks untouched for 14+ days. Keep or archive each one.</p>
-        <div id="stale-tasks-list"></div>
-
-        <div class="divider"></div>
-        <button class="btn btn-primary" onclick="toast('Review complete! Nice work.')">Finish Review</button>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════ -->
     <!-- PAGE: SETTINGS -->
     <!-- ════════════════════════════════════ -->
     <div class="page" id="page-settings">
@@ -1760,6 +1816,18 @@
             <button class="btn btn-danger btn-sm" onclick="clearAllData()">Clear All Data</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- PAGE: TASK DETAIL (drill-in view) -->
+    <!-- ════════════════════════════════════ -->
+    <div class="page" id="page-task-detail">
+      <div style="max-width:700px;">
+        <div style="margin-bottom:16px;">
+          <button class="btn btn-sm" onclick="navigateBack()" style="font-size:12px;">← Back</button>
+        </div>
+        <div id="task-detail-content"></div>
       </div>
     </div>
 
@@ -1946,6 +2014,13 @@ function getStore() {
     if (t.estMinutes === undefined) t.estMinutes = t.effort === 'quick' ? 30 : t.effort === 'big' ? 180 : 60;
     if (t.pinned === undefined) t.pinned = false;
     if (t.description === undefined) t.description = '';
+    if (t.research === undefined) t.research = '';
+    // Migrate: merge old notes into description if notes exists
+    if (t.notes && t.notes.trim()) {
+      if (t.description) t.description += '\n\n' + t.notes;
+      else t.description = t.notes;
+      delete t.notes;
+    }
   }
   return store;
 }
@@ -2046,7 +2121,7 @@ function scoreTask(task, store) {
 
   // Context boost — scan context feed for keyword matches
   const contextEntries = store.context || [];
-  const taskWords = (task.name + ' ' + task.notes + ' ' + task.category).toLowerCase();
+  const taskWords = (task.name + ' ' + (task.description || '') + ' ' + task.category).toLowerCase();
   for (const ctx of contextEntries) {
     const ctxWords = ctx.text.toLowerCase().split(/\s+/);
     let matchCount = 0;
@@ -2203,7 +2278,10 @@ let currentPage = 'today';
 let currentFilters = { area: 'All', category: 'All', impact: 'All', showCompleted: false };
 let ideaFilter = 'All';
 
+let previousPage = 'today';
+
 function navigate(page) {
+  if (currentPage !== page) previousPage = currentPage;
   currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
@@ -2216,9 +2294,115 @@ function navigate(page) {
   if (page === 'tasks') renderAllTasks();
   if (page === 'context') renderContextFeed();
   if (page === 'ideas') renderIdeas();
-  if (page === 'review') renderWeeklyReview();
   if (page === 'settings') renderSettings();
   if (page === 'add') resetAddForm();
+  if (page === 'task-detail') renderTaskDetail();
+}
+
+function navigateBack() {
+  navigate(previousPage || 'today');
+}
+
+function openTaskDetail(taskId) {
+  window._detailTaskId = taskId;
+  navigate('task-detail');
+}
+
+function renderTaskDetail() {
+  const taskId = window._detailTaskId;
+  const store = getStore();
+  const task = store.tasks.find(t => t.id === taskId);
+  if (!task) {
+    document.getElementById('task-detail-content').innerHTML = '<p>Task not found.</p>';
+    return;
+  }
+
+  const impactOpts = ['low','medium','high','critical'].map(v =>
+    `<option value="${v}"${v === task.impact ? ' selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`
+  ).join('');
+  const urgencyOpts = ['today','this_week','this_month','this_quarter','someday'].map(v =>
+    `<option value="${v}"${v === (task.urgency||'') ? ' selected' : ''}>${formatUrgency(v)}</option>`
+  ).join('');
+  const effortOpts = ['quick','medium','big'].map(v =>
+    `<option value="${v}"${v === (task.effort||'') ? ' selected' : ''}>${formatEffort(v)}</option>`
+  ).join('');
+  const catOpts = CATEGORIES.map(v =>
+    `<option value="${v}"${v === (task.category||'') ? ' selected' : ''}>${v}</option>`
+  ).join('');
+  const areaOpts = AREAS.map(v =>
+    `<option value="${v}"${v === (task.area||'') ? ' selected' : ''}>${v}</option>`
+  ).join('');
+
+  const pinLabel = task.pinned ? 'Unpin from Must Do' : 'Pin to Must Do';
+  const recOpts = `
+    <option value=""${!task.recurrence ? ' selected' : ''}>Does not repeat</option>
+    <option value="daily"${task.recurrence?.type==='daily' ? ' selected' : ''}>Daily</option>
+    <option value="weekly"${task.recurrence?.type==='weekly' ? ' selected' : ''}>Weekly</option>
+    <option value="monthly"${task.recurrence?.type==='monthly' ? ' selected' : ''}>Monthly</option>
+  `;
+
+  document.getElementById('task-detail-content').innerHTML = `
+    <input type="text" class="task-detail-title" value="${escAttr(task.name)}"
+      onchange="detailUpdateField('${task.id}','name',this.value)">
+
+    <div class="task-detail-meta">
+      <div class="task-detail-field">
+        <label>Priority</label>
+        <select onchange="detailUpdateField('${task.id}','impact',this.value)">${impactOpts}</select>
+      </div>
+      <div class="task-detail-field">
+        <label>Urgency</label>
+        <select onchange="detailUpdateField('${task.id}','urgency',this.value)">${urgencyOpts}</select>
+      </div>
+      <div class="task-detail-field">
+        <label>Effort</label>
+        <select onchange="detailUpdateField('${task.id}','effort',this.value)">${effortOpts}</select>
+      </div>
+      <div class="task-detail-field">
+        <label>Due Date</label>
+        <input type="date" value="${task.due || ''}" onchange="detailUpdateField('${task.id}','due',this.value)">
+      </div>
+      <div class="task-detail-field">
+        <label>Category</label>
+        <select onchange="detailUpdateField('${task.id}','category',this.value)">${catOpts}</select>
+      </div>
+      <div class="task-detail-field">
+        <label>Area</label>
+        <select onchange="detailUpdateField('${task.id}','area',this.value)">${areaOpts}</select>
+      </div>
+      <div class="task-detail-field">
+        <label>Repeats</label>
+        <select onchange="inlineUpdateRecurrence('${task.id}',this.value)">${recOpts}</select>
+      </div>
+    </div>
+
+    <div class="task-detail-section-label">Description</div>
+    <textarea class="task-detail-textarea" placeholder="What needs to be done, why it matters, any relevant details..."
+      onchange="detailUpdateField('${task.id}','description',this.value)">${escHtml(task.description || '')}</textarea>
+
+    <div class="task-detail-section-label">Research</div>
+    <textarea class="task-detail-textarea" placeholder="Paste findings from Claude chats, links, data, meeting notes..."
+      onchange="detailUpdateField('${task.id}','research',this.value)">${escHtml(task.research || '')}</textarea>
+
+    <div class="task-detail-actions">
+      <button class="btn btn-sm" onclick="detailComplete('${task.id}')" style="color:var(--green);border-color:var(--green);">✓ Complete</button>
+      <button class="btn btn-sm" onclick="togglePin('${task.id}');renderTaskDetail();">${pinLabel}</button>
+      <button class="btn btn-sm btn-danger" onclick="archiveTask('${task.id}');navigateBack();">Archive</button>
+    </div>
+  `;
+}
+
+function detailUpdateField(id, field, value) {
+  const store = getStore();
+  const task = store.tasks.find(t => t.id === id);
+  if (!task) return;
+  task[field] = value;
+  setStore(store);
+}
+
+function detailComplete(id) {
+  toggleComplete(id);
+  navigateBack();
 }
 
 function filterByArea(area) {
@@ -2430,7 +2614,7 @@ function renderCleanTaskRow(task) {
   let expandPanel = '';
   if (isExpanded) {
     const desc = task.description || '';
-    const notes = task.notes || '';
+    const research = task.research || '';
     const dueVal = task.due || '';
     const pinLabel = task.pinned ? 'Unpin from Must Do' : 'Pin to Must Do';
     const pinIcon = task.pinned ? '📌' : '📍';
@@ -2496,16 +2680,17 @@ function renderCleanTaskRow(task) {
         <div class="expand-detail-grid" style="margin-top:12px;">
           <div class="expand-detail-block">
             <div class="expand-detail-label">Description</div>
-            <textarea class="inline-edit-textarea" rows="2" placeholder="Add a description..." onchange="inlineUpdateField('${task.id}','description',this.value)" onclick="event.stopPropagation()">${escHtml(desc)}</textarea>
+            <textarea class="inline-edit-textarea" rows="3" placeholder="What needs to be done, why it matters..." onchange="inlineUpdateField('${task.id}','description',this.value)" onclick="event.stopPropagation()">${escHtml(desc)}</textarea>
           </div>
           <div class="expand-detail-block">
-            <div class="expand-detail-label">Notes</div>
-            <textarea class="inline-edit-textarea" rows="2" placeholder="Why does this matter?" onchange="inlineUpdateField('${task.id}','notes',this.value)" onclick="event.stopPropagation()">${escHtml(notes)}</textarea>
+            <div class="expand-detail-label">Research</div>
+            <textarea class="inline-edit-textarea" rows="3" placeholder="Paste findings from Claude, links, data..." onchange="inlineUpdateField('${task.id}','research',this.value)" onclick="event.stopPropagation()">${escHtml(research)}</textarea>
           </div>
         </div>
         <div class="expand-actions">
           <button class="btn btn-sm" onclick="event.stopPropagation();completeWithConfetti(event,'${task.id}')" style="color:var(--green);border-color:var(--green);">✓ Complete</button>
           <button class="btn btn-sm" onclick="event.stopPropagation();togglePin('${task.id}')">${pinIcon} ${pinLabel}</button>
+          <button class="btn btn-sm" onclick="event.stopPropagation();openTaskDetail('${task.id}')" style="color:var(--accent);border-color:var(--accent);">↗ Full View</button>
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();archiveTask('${task.id}')">Archive</button>
         </div>
       </div>
@@ -2516,7 +2701,10 @@ function renderCleanTaskRow(task) {
     <div class="task-row${isExpanded ? ' expanded' : ''}">
       <div class="${checkClass}" onclick="completeWithConfetti(event, '${task.id}')"></div>
       <div class="task-row-content" onclick="toggleTaskExpand('${task.id}')" style="cursor:pointer;">
-        <div class="${nameClass}">${escHtml(task.name)}</div>
+        <div class="${nameClass}">
+          ${escHtml(task.name)}
+          <span class="task-detail-name-link" onclick="event.stopPropagation();openTaskDetail('${task.id}')" title="Open full view" style="font-size:11px;color:var(--text-secondary);margin-left:6px;">↗</span>
+        </div>
         <div class="task-row-detail">${details.join('<span class="detail-sep">·</span>')}</div>
       </div>
       ${boostBtns}
@@ -2904,61 +3092,6 @@ function setIdeaFilter(area) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER: WEEKLY REVIEW
-// ═══════════════════════════════════════════════════════════
-
-function renderWeeklyReview() {
-  const store = getStore();
-  const now = Date.now();
-  const day = 86400000;
-  const weekAgo = now - 7 * day;
-
-  const completedThisWeek = store.completedLog.filter(c => c.completedAt > weekAgo).length;
-  const ideasThisWeek = store.ideas.filter(i => i.created > weekAgo).length;
-  const contextThisWeek = store.context.filter(c => c.created > weekAgo).length;
-  const staleTasks = store.tasks.filter(t => !t.completed && (now - t.created) > 14 * day);
-
-  document.getElementById('review-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-number">${completedThisWeek}</div><div class="stat-label">Tasks completed</div></div>
-    <div class="stat-card"><div class="stat-number">${ideasThisWeek}</div><div class="stat-label">Ideas captured</div></div>
-    <div class="stat-card"><div class="stat-number">${contextThisWeek}</div><div class="stat-label">Context notes</div></div>
-    <div class="stat-card"><div class="stat-number stat-red">${staleTasks.length}</div><div class="stat-label">Stale tasks (>14 days)</div></div>
-  `;
-
-  if (staleTasks.length === 0) {
-    document.getElementById('stale-tasks-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">✨</div><div class="empty-state-text">No stale tasks!</div><div class="empty-state-sub">Everything is fresh. Nice work.</div></div>';
-    return;
-  }
-
-  const scored = staleTasks.map(t => ({ ...t, score: scoreTask(t, store) }));
-  scored.sort((a, b) => a.created - b.created); // oldest first
-
-  document.getElementById('stale-tasks-list').innerHTML = scored.map(t => {
-    const daysOld = Math.floor((now - t.created) / day);
-    const createdDate = new Date(t.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}">${t.area}</span>`;
-    return `
-      <div class="card">
-        <div class="task-card">
-          <div class="task-content">
-            <div class="task-name">${escHtml(t.name)}</div>
-            <div class="task-meta">
-              ${areaTag}
-              <span class="tag tag-category">${t.category}</span>
-              <span class="meta-text">Created ${createdDate} — untouched ${daysOld} days</span>
-            </div>
-          </div>
-          <div class="task-actions">
-            <button onclick="toast('Keeping: ${escAttr(t.name)}')">Keep</button>
-            <button class="danger" onclick="archiveTask('${t.id}')">Archive</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-// ═══════════════════════════════════════════════════════════
 // ACTIONS
 // ═══════════════════════════════════════════════════════════
 
@@ -3012,8 +3145,8 @@ function quickCapture() {
     effort: 'medium',
     estMinutes: 30,
     due: '',
-    notes: '',
     description: '',
+    research: '',
     created: Date.now(),
     completed: false,
     pinned: false,
@@ -3042,7 +3175,7 @@ function saveTask() {
     estMinutes: parseInt(document.getElementById('task-est-time').value) || 60,
     due: document.getElementById('task-due').value,
     description: document.getElementById('task-description').value.trim(),
-    notes: document.getElementById('task-notes').value.trim(),
+    research: document.getElementById('task-research').value.trim(),
   };
 
   if (editId) {
@@ -3083,7 +3216,7 @@ function editTask(id) {
   document.getElementById('task-est-time').value = task.estMinutes || 60;
   document.getElementById('task-due').value = task.due || '';
   document.getElementById('task-description').value = task.description || '';
-  document.getElementById('task-notes').value = task.notes || '';
+  document.getElementById('task-research').value = task.research || '';
   // Show edit-only actions
   document.getElementById('edit-actions-bar').style.display = 'flex';
   document.getElementById('complete-edit-btn').textContent = task.completed ? '↩ Reopen Task' : '✓ Complete Task';
@@ -3104,7 +3237,7 @@ function resetAddForm() {
   document.getElementById('task-est-time').value = '60';
   document.getElementById('task-due').value = '';
   document.getElementById('task-description').value = '';
-  document.getElementById('task-notes').value = '';
+  document.getElementById('task-research').value = '';
   document.getElementById('edit-actions-bar').style.display = 'none';
   document.getElementById('edit-priority-control').style.display = 'none';
 }
@@ -3381,7 +3514,6 @@ function renderCurrentPage() {
   else if (currentPage === 'context') renderContextFeed();
   else if (currentPage === 'ideas') renderIdeas();
   else if (currentPage === 'claude') renderClaudeExport();
-  else if (currentPage === 'review') renderWeeklyReview();
   else if (currentPage === 'settings') renderSettings();
 }
 
@@ -3700,8 +3832,8 @@ function importAsanaCSV(event) {
           effort: 'medium',
           estMinutes: 30,
           due: due,
-          notes: notes + (tags ? (notes ? '\n' : '') + 'Tags: ' + tags : ''),
-          description: '',
+          description: notes + (tags ? (notes ? '\n' : '') + 'Tags: ' + tags : ''),
+          research: '',
           created: now - (rows.length - i) * 1000, // stagger creation times
           completed: false,
           pinned: false,

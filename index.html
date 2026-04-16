@@ -1388,17 +1388,13 @@
     </div>
 
     <div class="nav-section-label">Areas</div>
-    <div class="nav-item" onclick="filterByArea('The Studio')">
-      <span class="nav-dot" style="background:var(--red);"></span>
-      <span>The Studio</span>
-    </div>
-    <div class="nav-item" onclick="filterByArea('StudioSignal')">
+    <div class="nav-item" onclick="filterByArea('Work')">
       <span class="nav-dot" style="background:var(--blue);"></span>
-      <span>StudioSignal</span>
+      <span>Work</span>
     </div>
-    <div class="nav-item" onclick="filterByArea('Trailhead')">
+    <div class="nav-item" onclick="filterByArea('Side Project')">
       <span class="nav-dot" style="background:var(--green);"></span>
-      <span>Trailhead</span>
+      <span>Side Project</span>
     </div>
     <div class="nav-item" onclick="filterByArea('Personal')">
       <span class="nav-dot" style="background:var(--purple);"></span>
@@ -1521,9 +1517,8 @@
           <div class="form-group">
             <label class="form-label">Area</label>
             <select class="form-select" id="task-area">
-              <option value="The Studio">The Studio</option>
-              <option value="StudioSignal">StudioSignal</option>
-              <option value="Trailhead">Trailhead</option>
+              <option value="Work">Work</option>
+              <option value="Side Project">Side Project</option>
               <option value="Personal">Personal</option>
             </select>
           </div>
@@ -1652,9 +1647,8 @@
             <div class="form-group" style="margin-bottom:0; max-width:200px;">
               <label class="form-label">Area</label>
               <select class="form-select" id="context-area">
-                <option value="The Studio">The Studio</option>
-                <option value="StudioSignal">StudioSignal</option>
-                <option value="Trailhead">Trailhead</option>
+                <option value="Work">Work</option>
+                <option value="Side Project">Side Project</option>
                 <option value="Personal">Personal</option>
               </select>
             </div>
@@ -1696,9 +1690,8 @@
           <div style="display:flex; gap:12px; align-items:flex-end;">
             <div class="form-group" style="margin-bottom:0; max-width:200px;">
               <select class="form-select" id="idea-area">
-                <option value="The Studio">The Studio</option>
-                <option value="StudioSignal">StudioSignal</option>
-                <option value="Trailhead">Trailhead</option>
+                <option value="Work">Work</option>
+                <option value="Side Project">Side Project</option>
                 <option value="Personal">Personal</option>
               </select>
             </div>
@@ -1794,18 +1787,6 @@
         </div>
 
         <div style="margin:28px 0 8px;"><div class="section-label">Data</div></div>
-
-        <div class="settings-card" id="asana-import-card">
-          <div class="settings-card-title">Import Asana Tasks</div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:12px;">
-            Merge tasks from your Asana export into Daily Signals.<br>
-            Duplicates are skipped — nothing gets wiped.
-          </div>
-          <div style="display:flex; gap:8px; align-items:center;">
-            <button class="btn btn-primary btn-sm" onclick="importAsanaTasks()">Import Asana Tasks</button>
-            <span id="asana-import-status" style="font-size:11px; color:var(--text-secondary);"></span>
-          </div>
-        </div>
 
         <div class="settings-card">
           <div class="settings-card-title">Backup & Restore</div>
@@ -2032,12 +2013,11 @@ async function initApp() {
 
 const STORAGE_KEY = 'commandcenter';
 
-const AREAS = ['The Studio', 'StudioSignal', 'Trailhead', 'Personal'];
-const AREA_COLORS = {
-  'The Studio': 'studio',
-  'StudioSignal': 'signal',
-  'Trailhead': 'trailhead',
-  'Personal': 'personal'
+let AREAS = ['Work', 'Side Project', 'Personal'];
+let AREA_COLORS = {
+  'Work': 'blue',
+  'Side Project': 'green',
+  'Personal': 'purple'
 };
 const CATEGORIES = ['Operations','Marketing','Sales','Finance','Staffing','Front Desk','Engineering','Product','Legal','Admin','Other'];
 const IMPACTS = ['critical','high','medium','low'];
@@ -2185,104 +2165,45 @@ function getSeedTasks() {
   const now = Date.now();
   const day = 86400000;
   return [
-    { id: genId(), name: 'Discuss unlocked doors and windows', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-08', notes: '', description: '', created: now - 1*day, completed: false, pinned: false },
-    { id: genId(), name: 'Schedule calendar to work Front desk w Lexi Fri morning', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-07', notes: '', description: '', created: now - 2*day, completed: false, pinned: false },
-    { id: genId(), name: 'Discuss morning classes', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-10', notes: 'Sarah had zero yesterday; Amy had one today.   let\'s discuss how much longer we\'re going to hold these classes.', description: '', created: now - 3*day, completed: false, pinned: false },
-    { id: genId(), name: 'Look into the following customers at risk', area: 'The Studio', category: 'Operations', impact: 'critical', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: 'Courtney Macomber - paying member but hasn\'t taken a class since 2024.    Jennifer Ford - renewal payment from 2 months ago failed..retry charge.', description: '', created: now - 4*day, completed: false, pinned: false },
-    { id: genId(), name: 'Failed Payments - reach out to these customers', area: 'The Studio', category: 'Other', impact: 'critical', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: '⚡ FAILED PAYMENTS — PAYMENT OUTREACH NEEDED  MEMBER MEMBERSHIP AMOUNT LAST FAILED STILL ACTIVE? Taffy Dollard Senior Unlimited $145 Feb 28 check Robert Gould 4-Class Monthly $84 Feb 27 check Allison L', description: '', created: now - 5*day, completed: false, pinned: false },
-    { id: genId(), name: '🟡 HIGH RISK — OUTREACH THIS WEEK', area: 'The Studio', category: 'Other', impact: 'critical', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '🟡 HIGH RISK — OUTREACH THIS WEEK  MEMBER TIER $/MO DAYS SILENT LTV Susan Burns Super Yogi $165 38 $3,146 Paul Gorman Super Yogi $165 47 $622 Liza Bass BF Super Yogi $152 36 $9,273 Marcia Jaffe Senior ', description: '', created: now - 6*day, completed: false, pinned: false },
-    { id: genId(), name: 'Push Out Rosemaria workshop and reach out to her about advertising it', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-07', notes: '', description: '', created: now - 7*day, completed: false, pinned: false },
-    { id: genId(), name: 'Create Pilates teacher training plan w Holly Fernandez', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-08', notes: 'meet s Shannon, head of education at HFA conference', description: '', created: now - 8*day, completed: false, pinned: false },
-    { id: genId(), name: 'Transactional emails...', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'check all trans emails and update.', description: '', created: now - 9*day, completed: false, pinned: false },
-    { id: genId(), name: 'Ad', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-07', notes: '', description: '', created: now - 10*day, completed: false, pinned: false },
-    { id: genId(), name: 'Discuss Flex Membership', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: 'Create new subscription at $119/month named Flex Unlimited Frame as upgrade, not discount Set eligible windows: weekdays 3pm+ / before 9am / all weekend Create \'founding\' member promo: first month $', description: '', created: now - 11*day, completed: false, pinned: false },
-    { id: genId(), name: 'Explore Outdoor Classes', area: 'The Studio', category: 'Operations', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 12*day, completed: false, pinned: false },
-    { id: genId(), name: 'Outdoor Sign?', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 13*day, completed: false, pinned: false },
-    { id: genId(), name: 'Figure out Cold Brew Tea', area: 'The Studio', category: 'Operations', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 14*day, completed: false, pinned: false },
-    { id: genId(), name: 'Reach out to Alicia Davon about Relationship/Tantra Workshop', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: 'Alicia Davon Relationship Coach and Tantra Teacher Wants to hold a workshop 415-308-9580', description: '', created: now - 15*day, completed: false, pinned: false },
-    { id: genId(), name: 'Create Google sheet of all Yoga Members who used their free Reformer Pilates Trial', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 16*day, completed: false, pinned: false },
-    { id: genId(), name: 'Create Price Binder', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 17*day, completed: false, pinned: false },
-    { id: genId(), name: 'Momence support: is there a way for me to change the teacher on a sub request instead of going to the schedule to do it?', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-10', notes: '', description: '', created: now - 18*day, completed: false, pinned: false },
-    { id: genId(), name: 'Get Emilia the schedule insta story template', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: '', description: '', created: now - 19*day, completed: false, pinned: false },
-    { id: genId(), name: 'update Casey video 8:30 am time', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-08', notes: '', description: '', created: now - 20*day, completed: false, pinned: false },
-    { id: genId(), name: 'Figure out why we have zero spots available for Class Pass Reformer classes', area: 'The Studio', category: 'Operations', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 21*day, completed: false, pinned: false },
-    { id: genId(), name: 'FD Schedule', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Debbie gone until week of 4/27', description: '', created: now - 22*day, completed: false, pinned: false },
-    { id: genId(), name: 'Someone wants to book a group private Reformer week of April 24', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-09', notes: 'How much do we charge? If we don\'t already have a rate, I think $175 for the first two people, plus $20 per additional person.', description: '', created: now - 23*day, completed: false, pinned: false },
-    { id: genId(), name: 'Do we offer a 4x yoga, 4x Pilates membership?', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'for $200?  $200 - $84 (4 yoga class monthly) = $116 or $29 per Reformer class', description: '', created: now - 24*day, completed: false, pinned: false },
-    { id: genId(), name: 'Katy Anderson wants a 4x yoga by 4x Pilates membership', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-18', notes: 'Follow up April 18', description: '', created: now - 25*day, completed: false, pinned: false },
-    { id: genId(), name: 'Ping Natasha Boas about All Access 8', area: 'The Studio', category: 'Operations', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-13', notes: '', description: '', created: now - 26*day, completed: false, pinned: false },
-    { id: genId(), name: 'Should I try to convert Diane Taylor to All Access Unlimited?', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'She\'s got a yoga 10-pack and Reformer 10-pack, coming to a total of $730.   Seems like she\'d be a great candidate for All Access Unlimited.   If we converted her (or others like her) would we wait u', description: '', created: now - 27*day, completed: false, pinned: false },
-    { id: genId(), name: 'Develop FD Sales Manual', area: 'The Studio', category: 'Sales', impact: 'high', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: 'create FD sales guide:     questions', description: '', created: now - 28*day, completed: false, pinned: false },
-    { id: genId(), name: 'Schedule Front Desk Sales Training in April', area: 'The Studio', category: 'Sales', impact: 'high', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 29*day, completed: false, pinned: false },
-    { id: genId(), name: 'Message Lizi Cruz about upgrading to 4-class monthly', area: 'The Studio', category: 'Sales', impact: 'medium', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: 'Lizi Cruz is about to use the last of her 20-pack. Text her about upgrading to monthly membership or purchasing another class pack.', description: '', created: now - 30*day, completed: false, pinned: false },
-    { id: genId(), name: 'Follow up with Lilja about a 50% off membership', area: 'The Studio', category: 'Sales', impact: 'high', urgency: 'today', effort: 'quick', estMinutes: 20, due: '2026-04-01', notes: '', description: '', created: now - 1*day, completed: false, pinned: false },
-    { id: genId(), name: 'All Access Summer Conversion Campaign', area: 'The Studio', category: 'Marketing', impact: 'critical', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: 'The Offer: From May 1 through July 31, existing unlimited yoga members receive 4 complimentary Reformer Pilates classes to be used within 2 weeks of redemption. Cost to The Studio: $5–10 per student i', description: '', created: now - 2*day, completed: false, pinned: false },
-    { id: genId(), name: 'Promotions:', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '$Unlimited 15 guest passes     1 free guest pass     (create flyer, social post)     Mention in newsletter for a couple months', description: '', created: now - 3*day, completed: false, pinned: false },
-    { id: genId(), name: 'Momence sequence updates', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: 'Sequence updates:      intro offer:  add more emails post expiration.      create intro offer for reformer students', description: '', created: now - 4*day, completed: false, pinned: false },
-    { id: genId(), name: 'Collaborations:  mtn biking club - monthly rides; tam valley canoe club; SF running club, cross fit gym - event.  discount codes in momence.  Offer - discounted membership and saunas.  Evaluating B12 Love partnership.  Telomere - update sequences. Cavallo Point spa.  look at other wellness companies.', area: 'The Studio', category: 'Other', impact: 'high', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: '—', description: '', created: now - 5*day, completed: false, pinned: false },
-    { id: genId(), name: 'New possible collaborations:', area: 'The Studio', category: 'Other', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '—', description: '', created: now - 6*day, completed: false, pinned: false },
-    { id: genId(), name: 'reach out to Madison Fest (social media person)', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'quick', estMinutes: 20, due: '', notes: '', description: '', created: now - 7*day, completed: false, pinned: false },
-    { id: genId(), name: 'Meet with Trinity about managing social', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 8*day, completed: false, pinned: false },
-    { id: genId(), name: 'add button to pilates page', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 9*day, completed: false, pinned: false },
-    { id: genId(), name: 'Newsletter 4-7', area: 'The Studio', category: 'Marketing', impact: 'critical', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '\'-All Access memberships -Yoga Nidra canceled on 4/7 and 4/14', description: '', created: now - 10*day, completed: false, pinned: false },
-    { id: genId(), name: 'Review creative for Win-Back and publish for 7 days', area: 'The Studio', category: 'Marketing', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-03-25', notes: '', description: '', created: now - 11*day, completed: false, pinned: false },
-    { id: genId(), name: 'Marketing push around freeze and 6-month flex to prevent summer slump', area: 'The Studio', category: 'Marketing', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-04-07', notes: '', description: '', created: now - 12*day, completed: false, pinned: false },
-    { id: genId(), name: 'Ad banner to website', area: 'The Studio', category: 'Other', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 13*day, completed: false, pinned: false },
-    { id: genId(), name: 'Post flyer in The Studio', area: 'The Studio', category: 'Other', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 14*day, completed: false, pinned: false },
-    { id: genId(), name: 'Announce in newsletter', area: 'The Studio', category: 'Other', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 15*day, completed: false, pinned: false },
-    { id: genId(), name: 'Social Post', area: 'The Studio', category: 'Other', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 16*day, completed: false, pinned: false },
-    { id: genId(), name: 'Win-Back Campaign - Develop creative for META ad', area: 'The Studio', category: 'Marketing', impact: 'high', urgency: 'today', effort: 'big', estMinutes: 150, due: '2026-04-01', notes: 'create landing page for win back customers.       finish building out campaign https://adsmanager.facebook.com/adsmanager/manage/ads?act=586670486048380&business_id=1544813785718025&nav_entry_point=le', description: '', created: now - 17*day, completed: false, pinned: false },
-    { id: genId(), name: 'Hat Campaign', area: 'The Studio', category: 'Marketing', impact: 'high', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: '', description: '', created: now - 18*day, completed: false, pinned: false },
-    { id: genId(), name: 'Social Media Audit Questions', area: 'The Studio', category: 'Marketing', impact: 'high', urgency: 'today', effort: 'big', estMinutes: 150, due: '2026-03-27', notes: 'Accounts     Instagram handle     Facebook page     Google Business profile Performance (last 30–60 days)     Followers (start → current)     Avg post reach (or screenshots of Insights)     Engagement', description: '', created: now - 19*day, completed: false, pinned: false },
-    { id: genId(), name: 'Social media - HYR person work w us?', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 20*day, completed: false, pinned: false },
-    { id: genId(), name: 'Evaluate Manus tool for social', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'https://www.instagram.com/reel/DV4MrDYkkRa/?igsh=NTc4MTIwNjQ2YQ==', description: '', created: now - 21*day, completed: false, pinned: false },
-    { id: genId(), name: 'Review Social Posting Calendar & Create Plan for how to best work with Melanie', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: '', description: '', created: now - 22*day, completed: false, pinned: false },
-    { id: genId(), name: 'Film Neda\'s Yoga Nidra', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 23*day, completed: false, pinned: false },
-    { id: genId(), name: 'Create Ad: Why the Studio?', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 24*day, completed: false, pinned: false },
-    { id: genId(), name: 'Create Ad: Why Yoga?', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 25*day, completed: false, pinned: false },
-    { id: genId(), name: 'Build out content library with teacher interviews', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: '', description: '', created: now - 26*day, completed: false, pinned: false },
-    { id: genId(), name: 'Look into auto DM\'s.', area: 'The Studio', category: 'Marketing', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 27*day, completed: false, pinned: false },
-    { id: genId(), name: 'Community Outreach Program Ideas', area: 'The Studio', category: 'Marketing', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: 'Senior-focused     Mill Valley Recreation — Active Adults 50+ program. Contact Cole Ross at cross@cityofmillvalley.gov / 415-383-1370. Offer a free reformer demo or guest speaker slot on reformer Pila', description: '', created: now - 28*day, completed: false, pinned: false },
-    { id: genId(), name: 'Connect with Jim Welte, chamber of commerce', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 29*day, completed: false, pinned: false },
-    { id: genId(), name: 'Tam High Wellness & AIM Programs', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Wellness program - Jess to intro herself to Yvonne and team.    AIM program - social media help and coordinate efforts with Gray to create FD internship program', description: '', created: now - 30*day, completed: false, pinned: false },
-    { id: genId(), name: 'Mill Valley Art Center', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'reach out to Reformer student - Stephanie Dorfman - setup joint partnership, etc.', description: '', created: now - 1*day, completed: false, pinned: false },
-    { id: genId(), name: 'SF Running Club', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'coordinate with Rosemaria', description: '', created: now - 2*day, completed: false, pinned: false },
-    { id: genId(), name: 'Local brands', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Vuori - teach classes at the store.  students get discounts.    Beyond Yoga', description: '', created: now - 3*day, completed: false, pinned: false },
-    { id: genId(), name: 'Community Collab ideas', area: 'The Studio', category: 'Marketing', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: 'Collaborations:  cavallo point spa,  mtn biking club - monthly rides; tam valley canoe club; SF running club, cross fit gym - event.  discount codes in momence.  Offer - discounted membership and saun', description: '', created: now - 4*day, completed: false, pinned: false },
-    { id: genId(), name: 'Community Giving Campaign Ideas', area: 'The Studio', category: 'Marketing', impact: 'low', urgency: 'this_quarter', effort: 'big', estMinutes: 150, due: '', notes: 'Ex: APRIL - Earth Month  Campaigns:      Percentage of studio proceeds go to local non-profit (ex April is Slide Ranch)     Incentivise students to participate  (April: ride bike or walk to class) and', description: '', created: now - 5*day, completed: false, pinned: false },
-    { id: genId(), name: 'Join the Mill Valley Chamber Commerce', area: 'The Studio', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 6*day, completed: false, pinned: false },
-    { id: genId(), name: 'Recruiting', area: 'The Studio', category: 'Staffing', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Reformer Pilates:       Casey - evaluating Tuesday/Thursday 8 am; experienced w Stott equipment.  Super strong.  should get indication week of March 2     Heather from Pilates Proworks     Michelle - ', description: '', created: now - 7*day, completed: false, pinned: false },
-    { id: genId(), name: 'Address low-performing classes', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Mirabai\'s Wednesday 1 pm classes.       morning classes', description: '', created: now - 8*day, completed: false, pinned: false },
-    { id: genId(), name: 'Increase Reformer Intro Offer Purchases', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 9*day, completed: false, pinned: false },
-    { id: genId(), name: 'Figure Out KPIs and How to Track', area: 'The Studio', category: 'Operations', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 10*day, completed: false, pinned: false },
-    { id: genId(), name: 'Understand Customer Journey', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 11*day, completed: false, pinned: false },
-    { id: genId(), name: 'Wall or No Wall???', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 12*day, completed: false, pinned: false },
-    { id: genId(), name: 'Figure Out Cold Plunge/Zen Den', area: 'The Studio', category: 'Operations', impact: 'low', urgency: 'this_quarter', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 13*day, completed: false, pinned: false },
-    { id: genId(), name: 'Optimize Schedule', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 150, due: '', notes: '\'-each quarter, look at class numbers and analyze class times, advertising, teachers', description: '', created: now - 14*day, completed: false, pinned: false },
-    { id: genId(), name: 'Amy Naber DJ Event -- reschedule to May', area: 'The Studio', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: 'Momence purchase link https://momence.com/l/b8h1zdWM.   Here is a short Version  - I can add photos and we can add DJ just a start- Thinking I would do a flow house music playlist- 6-7(without DJ) the', description: '', created: now - 15*day, completed: false, pinned: false },
-    { id: genId(), name: 'create flyer for bulletin board in studio', area: 'The Studio', category: 'Other', impact: 'high', urgency: 'today', effort: 'medium', estMinutes: 60, due: '2026-03-06', notes: '', description: '', created: now - 16*day, completed: false, pinned: false }
-];
+    // Work - Operations
+    { id: genId(), name: 'Review quarterly budget and flag overages', area: 'Work', category: 'Operations', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Schedule team standup for next sprint', area: 'Work', category: 'Operations', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 15, due: '', notes: '', description: '', created: now - 3*day, completed: false, pinned: false, recurrence: { type: 'weekly' } },
+    { id: genId(), name: 'Update onboarding docs for new hires', area: 'Work', category: 'Operations', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 120, due: '', notes: '', description: '', created: now - 5*day, completed: false, pinned: false, recurrence: null },
+    // Work - Marketing
+    { id: genId(), name: 'Draft social media posts for product launch', area: 'Work', category: 'Marketing', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 1*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Review analytics dashboard and prep weekly report', area: 'Work', category: 'Marketing', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 30, due: '', notes: '', description: '', created: now - 4*day, completed: false, pinned: false, recurrence: { type: 'weekly' } },
+    { id: genId(), name: 'Brainstorm email campaign for summer promotion', area: 'Work', category: 'Marketing', impact: 'high', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 6*day, completed: false, pinned: false, recurrence: null },
+    // Work - Sales
+    { id: genId(), name: 'Follow up with 3 warm leads from last week', area: 'Work', category: 'Sales', impact: 'critical', urgency: 'today', effort: 'medium', estMinutes: 45, due: '', notes: '', description: '', created: now - 1*day, completed: false, pinned: true, recurrence: null },
+    { id: genId(), name: 'Prep pitch deck for Friday client meeting', area: 'Work', category: 'Sales', impact: 'high', urgency: 'this_week', effort: 'big', estMinutes: 150, due: '', notes: '', description: '', created: now - 3*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Update CRM with notes from recent calls', area: 'Work', category: 'Sales', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 20, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
+    // Side Project
+    { id: genId(), name: 'Fix mobile layout bug on landing page', area: 'Side Project', category: 'Engineering', impact: 'high', urgency: 'this_week', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 2*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Write blog post about lessons learned so far', area: 'Side Project', category: 'Marketing', impact: 'medium', urgency: 'this_month', effort: 'big', estMinutes: 120, due: '', notes: '', description: '', created: now - 7*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Set up basic analytics tracking', area: 'Side Project', category: 'Engineering', impact: 'medium', urgency: 'this_month', effort: 'medium', estMinutes: 60, due: '', notes: '', description: '', created: now - 10*day, completed: false, pinned: false, recurrence: null },
+    // Personal
+    { id: genId(), name: 'Book dentist appointment', area: 'Personal', category: 'Other', impact: 'medium', urgency: 'this_week', effort: 'quick', estMinutes: 10, due: '', notes: '', description: '', created: now - 4*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Research and sign up for online course', area: 'Personal', category: 'Other', impact: 'low', urgency: 'this_month', effort: 'medium', estMinutes: 45, due: '', notes: '', description: '', created: now - 8*day, completed: false, pinned: false, recurrence: null },
+    { id: genId(), name: 'Plan weekend trip with friends', area: 'Personal', category: 'Other', impact: 'low', urgency: 'this_month', effort: 'medium', estMinutes: 30, due: '', notes: '', description: '', created: now - 12*day, completed: false, pinned: false, recurrence: null },
+  ];
 }
 
 function getSeedIdeas() {
   const now = Date.now();
   const day = 86400000;
   return [
-    { id: genId(), text: 'Google Reviews Collection Ideas — Ideas to Collect Testimonials/Reviews       Hold a contest/giveaway (ie. “once we hit 100 Google reviews, we’ll put everyone that left a review into a drawing for $100 towards The Studio.)         **E', area: 'The Studio', created: now - 1*day },
-    { id: genId(), text: 'Set up potential teacher training collab with Pedro Franco — https://www.instagram.com/pedrofranco_premananda?igsh=NTc4MTIwNjQ2YQ%3D%3D', area: 'The Studio', created: now - 2*day },
-    { id: genId(), text: 'YTT 2027', area: 'The Studio', created: now - 3*day },
-    { id: genId(), text: 'Summer Wall', area: 'The Studio', created: now - 4*day }
-];
+    { id: genId(), text: 'Automate weekly reporting with a simple dashboard', area: 'Work', created: now - 2*day },
+    { id: genId(), text: 'Start a newsletter for the side project to build an audience early', area: 'Side Project', created: now - 5*day },
+    { id: genId(), text: 'Try a morning routine for 30 days — journal, exercise, no phone for first hour', area: 'Personal', created: now - 8*day },
+  ];
 }
 
 function getSeedContext() {
   const now = Date.now();
   const day = 86400000;
   return [
-    { id: genId(), text: '4-class monthly cancellation rate rising ~15% MoM. Primary drivers appear to be schedule dissatisfaction and price sensitivity. Summer dip will compound this — need retention strategy before June.', area: 'The Studio', created: now - 1*day, source: 'Claude chat' },
-    { id: genId(), text: 'Reformer Pilates classes are filling up faster than yoga. Average 85% occupancy vs 60% for yoga. This is our biggest growth lever — need marketing push before summer.', area: 'The Studio', created: now - 2*day, source: 'manual note' },
-    { id: genId(), text: 'Brian finished the Momence API integration. Signal Apps can now pull real-time member and class data. Next step: build the analytics dashboard MVP.', area: 'StudioSignal', created: now - 4*day, source: 'Claude chat' },
-    { id: genId(), text: 'Trailhead trademark application submitted Nov 26 2025. Serial #99518532. Need to check status periodically.', area: 'Trailhead', created: now - 8*day, source: 'Asana note' },
+    { id: genId(), text: 'Q2 goals: grow revenue 15%, launch 2 new features, hire 1 contractor.', area: 'Work', created: now - 1*day, source: 'manual note' },
+    { id: genId(), text: 'Side project has 50 beta users. Goal is 200 by end of summer.', area: 'Side Project', created: now - 3*day, source: 'manual note' },
   ];
 }
 
@@ -2652,8 +2573,8 @@ function renderToday() {
 }
 
 function renderCleanTaskRow(task) {
-  const areaColors = { 'The Studio': 'var(--red)', 'StudioSignal': 'var(--blue)', 'Trailhead': 'var(--green)', 'Personal': 'var(--purple)' };
-  const areaNames = { 'The Studio': 'Studio', 'StudioSignal': 'Signal', 'Trailhead': 'Trailhead', 'Personal': 'Personal' };
+  const areaColors = { 'Work': 'var(--blue)', 'Side Project': 'var(--green)', 'Personal': 'var(--purple)' };
+  const areaNames = { 'Work': 'Work', 'Side Project': 'Side Project', 'Personal': 'Personal' };
   const dotColor = areaColors[task.area] || '#999';
   const areaName = areaNames[task.area] || task.area;
 
@@ -2904,7 +2825,7 @@ function renderTaskCard(task, showScore) {
 }
 
 function renderTaskCardInner(task, showScore) {
-  const areaTag = `<span class="tag tag-${AREA_COLORS[task.area]}">${task.area === 'The Studio' ? 'Studio' : task.area}</span>`;
+  const areaTag = `<span class="tag tag-${AREA_COLORS[task.area]}">${task.area}</span>`;
   const catTag = `<span class="tag tag-category">${task.category}</span>`;
 
   let impactTag = '';
@@ -2980,7 +2901,7 @@ function renderAllTasks() {
   for (const a of AREAS) {
     const count = areaCounts[a] || 0;
     const dotColor = AREA_COLORS[a];
-    areaHtml += `<button class="chip ${currentFilters.area === a ? 'active' : ''}" onclick="setFilter('area','${a}')"><span class="nav-dot" style="background:var(--${dotColor === 'studio' ? 'red' : dotColor === 'signal' ? 'blue' : dotColor === 'trailhead' ? 'green' : 'purple'})"></span>${a === 'The Studio' ? 'Studio' : a} (${count})</button>`;
+    areaHtml += `<button class="chip ${currentFilters.area === a ? 'active' : ''}" onclick="setFilter('area','${a}')"><span class="nav-dot" style="background:${dotColor}"></span>${a} (${count})</button>`;
   }
   document.getElementById('area-filters').innerHTML = areaHtml;
 
@@ -3021,8 +2942,8 @@ function renderAllTasks() {
     return scoreB - scoreA;
   });
 
-  const areaColors = { 'The Studio': 'var(--red)', 'StudioSignal': 'var(--blue)', 'Trailhead': 'var(--green)', 'Personal': 'var(--purple)' };
-  const areaNames = { 'The Studio': 'Studio', 'StudioSignal': 'Signal', 'Trailhead': 'Trailhead', 'Personal': 'Personal' };
+  const areaColors = { 'Work': 'var(--blue)', 'Side Project': 'var(--green)', 'Personal': 'var(--purple)' };
+  const areaNames = { 'Work': 'Work', 'Side Project': 'Side Project', 'Personal': 'Personal' };
 
   let html = '';
   for (const cat of catOrder) {
@@ -3116,7 +3037,7 @@ function renderContextFeed() {
   document.getElementById('context-list').innerHTML = entries.map(e => {
     const date = new Date(e.created);
     const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' at ' + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    const areaTag = `<span class="tag tag-${AREA_COLORS[e.area]}" style="font-size:9px;">${e.area === 'The Studio' ? 'Studio' : e.area}</span>`;
+    const areaTag = `<span class="tag tag-${AREA_COLORS[e.area]}" style="font-size:9px;">${e.area}</span>`;
     return `
       <div class="context-card">
         <div class="context-text">${escHtml(e.text)}</div>
@@ -3142,7 +3063,7 @@ function renderIdeas() {
   // Area filters
   let filterHtml = `<button class="chip ${ideaFilter === 'All' ? 'active' : ''}" onclick="setIdeaFilter('All')">All</button>`;
   for (const a of AREAS) {
-    filterHtml += `<button class="chip ${ideaFilter === a ? 'active' : ''}" onclick="setIdeaFilter('${a}')">${a === 'The Studio' ? 'Studio' : a}</button>`;
+    filterHtml += `<button class="chip ${ideaFilter === a ? 'active' : ''}" onclick="setIdeaFilter('${a}')">${a}</button>`;
   }
   document.getElementById('idea-area-filters').innerHTML = filterHtml;
 
@@ -3158,7 +3079,7 @@ function renderIdeas() {
   document.getElementById('ideas-list').innerHTML = ideas.map(i => {
     const date = new Date(i.created);
     const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const areaTag = `<span class="tag tag-${AREA_COLORS[i.area]}" style="font-size:9px;">${i.area === 'The Studio' ? 'Studio' : i.area}</span>`;
+    const areaTag = `<span class="tag tag-${AREA_COLORS[i.area]}" style="font-size:9px;">${i.area}</span>`;
     return `
       <div class="idea-card">
         <span class="idea-icon">💡</span>
@@ -3281,7 +3202,7 @@ function renderWeeklyReview() {
   document.getElementById('stale-tasks-list').innerHTML = scored.map(t => {
     const daysOld = Math.floor((now - t.created) / day);
     const createdDate = new Date(t.created).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}">${t.area === 'The Studio' ? 'Studio' : t.area}</span>`;
+    const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}">${t.area}</span>`;
     return `
       <div class="card">
         <div class="task-card">
@@ -3350,7 +3271,7 @@ function quickCapture() {
   store.tasks.push({
     id: genId(),
     name: name,
-    area: AREAS[0] || 'The Studio',
+    area: AREAS[0] || 'Work',
     category: 'Other',
     impact: 'medium',
     urgency: 'this_week',
@@ -3441,7 +3362,7 @@ function resetAddForm() {
   document.getElementById('task-submit-btn').textContent = 'Create Task';
   document.getElementById('editing-task-id').value = '';
   document.getElementById('task-name').value = '';
-  document.getElementById('task-area').value = 'The Studio';
+  document.getElementById('task-area').value = AREAS[0];
   document.getElementById('task-category').value = 'Operations';
   document.getElementById('task-impact').value = 'medium';
   document.getElementById('task-urgency').value = 'this_month';
@@ -3485,7 +3406,7 @@ function saveQuickContext() {
   store.context.push({
     id: genId(),
     text,
-    area: 'The Studio', // default for quick context
+    area: AREAS[0], // default for quick context
     created: Date.now(),
     source: 'quick note'
   });
@@ -3856,7 +3777,7 @@ function renderDailySchedule() {
       if (!task || task.completed) continue;
       const mins = task.estMinutes || 60;
       blockMinutes += mins;
-      const areaTag = `<span class="tag tag-${AREA_COLORS[task.area]}" style="font-size:10px;">${task.area === 'The Studio' ? 'Studio' : task.area}</span>`;
+      const areaTag = `<span class="tag tag-${AREA_COLORS[task.area]}" style="font-size:10px;">${task.area}</span>`;
       tasksHtml += `
         <div class="schedule-task-card">
           <div class="task-checkbox${task.completed ? ' checked' : ''}" onclick="toggleComplete('${task.id}')" style="width:18px;height:18px;"></div>
@@ -3898,7 +3819,7 @@ function renderDailySchedule() {
     document.getElementById('unscheduled-tasks').innerHTML = '<div class="empty-state" style="padding:20px;"><div class="empty-state-text">All top tasks are scheduled!</div></div>';
   } else {
     document.getElementById('unscheduled-tasks').innerHTML = unscheduled.map(t => {
-      const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}" style="font-size:10px;">${t.area === 'The Studio' ? 'Studio' : t.area}</span>`;
+      const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}" style="font-size:10px;">${t.area}</span>`;
       return `
         <div class="schedule-task-card" style="cursor:pointer;" onclick="openAssignModal('${t.id}')">
           <div style="flex:1;min-width:0;">

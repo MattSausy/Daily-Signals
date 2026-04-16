@@ -2145,7 +2145,11 @@ async function authAction() {
 }
 
 async function signOut() {
-  await sb.auth.signOut();
+  try {
+    await sb.auth.signOut();
+  } catch(e) {
+    console.error('Sign out error:', e);
+  }
   currentUser = null;
   storeCache = null;
   document.getElementById('auth-screen').classList.remove('hidden');

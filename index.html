@@ -510,18 +510,64 @@
     z-index: 500;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(2px);
+    animation: modalFadeIn 0.15s ease;
   }
+  @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .modal-overlay.show { display: flex; }
   .modal {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 24px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
+    padding: 28px;
+    max-width: 560px;
+    width: 92%;
+    max-height: 85vh;
     overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    animation: modalSlideUp 0.2s ease;
   }
   .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-header .modal-title { margin-bottom: 0; }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+  }
+  .modal-close:hover { background: var(--hover-bg); color: var(--text); }
+  .more-options-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 8px 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+  .more-options-toggle:hover { opacity: 0.8; }
+  .more-options-toggle .toggle-arrow { transition: transform 0.2s; display: inline-block; font-size: 11px; }
+  .more-options-toggle.expanded .toggle-arrow { transform: rotate(90deg); }
+  .more-options-section {
+    display: none;
+    animation: slideUp 0.2s ease;
+  }
+  .more-options-section.show { display: block; }
 
   /* ═══ ADD TASK BUTTON (floating) ═══ */
   .fab {
@@ -1621,133 +1667,7 @@
     </div>
 
     <!-- ════════════════════════════════════ -->
-    <!-- PAGE: ADD TASK -->
-    <!-- ════════════════════════════════════ -->
-    <div class="page" id="page-add">
-      <div style="max-width:560px;">
-        <div class="page-title" id="add-page-title">Add New Task</div>
-        <div class="page-subtitle">Quick capture — 3 key fields + optional context</div>
-
-        <div class="form-group">
-          <label class="form-label">Task Name</label>
-          <input type="text" class="form-input" id="task-name" placeholder='e.g., "Analyze 4-class monthly cancellation data"'>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Area</label>
-            <select class="form-select" id="task-area">
-              <option value="Work">Work</option>
-              <option value="Side Project">Side Project</option>
-              <option value="Personal">Personal</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Category</label>
-            <select class="form-select" id="task-category">
-              <option value="Operations">Operations</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Sales">Sales</option>
-              <option value="Finance">Finance</option>
-              <option value="Staffing">Staffing</option>
-              <option value="Front Desk">Front Desk</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Product">Product</option>
-              <option value="Legal">Legal</option>
-              <option value="Admin">Admin</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Impact ★</label>
-            <select class="form-select" id="task-impact">
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium" selected>Medium</option>
-              <option value="low">Low</option>
-            </select>
-            <div class="form-hint">How much does this move the needle?</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Urgency ⏰</label>
-            <select class="form-select" id="task-urgency">
-              <option value="today">Today</option>
-              <option value="this_week">This week</option>
-              <option value="this_month" selected>This month</option>
-              <option value="this_quarter">This quarter</option>
-              <option value="someday">Someday</option>
-            </select>
-            <div class="form-hint">When does this need to happen?</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Effort ⏱</label>
-            <select class="form-select" id="task-effort">
-              <option value="quick">Quick (&lt;30 min)</option>
-              <option value="medium" selected>Medium (1-2 hrs)</option>
-              <option value="big">Big (half day+)</option>
-            </select>
-            <div class="form-hint">How long will this take?</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Estimated Time ⏱</label>
-            <select class="form-select" id="task-est-time">
-              <option value="15">15 min</option>
-              <option value="30">30 min</option>
-              <option value="45">45 min</option>
-              <option value="60" selected>1 hour</option>
-              <option value="90">1.5 hours</option>
-              <option value="120">2 hours</option>
-              <option value="180">3 hours</option>
-              <option value="240">4+ hours</option>
-            </select>
-            <div class="form-hint">How long will this actually take?</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Due Date (optional)</label>
-            <input type="date" class="form-input" id="task-due">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Description</label>
-          <textarea class="form-textarea" id="task-description" style="min-height:100px;" placeholder="What needs to be done, why it matters, any relevant details..."></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Research (optional)</label>
-          <textarea class="form-textarea" id="task-research" style="min-height:80px;" placeholder="Paste findings from Claude, links, data, meeting notes..."></textarea>
-        </div>
-
-        <!-- Priority promote/demote (shown when editing) -->
-        <div class="edit-priority-control" id="edit-priority-control" style="display:none;">
-          <div>
-            <div class="edit-priority-label">Priority</div>
-            <div class="edit-priority-display" id="edit-priority-display"></div>
-          </div>
-          <div class="edit-priority-arrows">
-            <button class="priority-arrow" onclick="editChangeImpact('down')" id="edit-down-btn" title="Decrease priority">▼</button>
-            <button class="priority-arrow" onclick="editChangeImpact('up')" id="edit-up-btn" title="Increase priority">▲</button>
-          </div>
-        </div>
-
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-primary" id="task-submit-btn" onclick="saveTask()">Create Task</button>
-          <button class="btn" onclick="cancelAddTask()">Cancel</button>
-        </div>
-
-        <div class="edit-actions-bar" id="edit-actions-bar" style="display:none;">
-          <button class="btn" onclick="completeFromEdit()" id="complete-edit-btn" style="color:var(--green);border-color:var(--green);">✓ Complete Task</button>
-          <button class="btn btn-danger" onclick="deleteFromEdit()">Delete Task</button>
-        </div>
-        <input type="hidden" id="editing-task-id" value="">
-      </div>
-    </div>
+    <!-- ADD TASK page removed — now uses modal overlay -->
 
     <!-- ════════════════════════════════════ -->
     <!-- PAGE: CONTEXT FEED -->
@@ -1949,7 +1869,139 @@
 </div><!-- /app -->
 
 <!-- FAB -->
-<button class="fab" onclick="navigate('add')" title="Add Task">+</button>
+<button class="fab" onclick="openTaskModal()" title="Add Task (N)">+</button>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-task-title">New Task</div>
+      <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Task Name</label>
+      <input type="text" class="form-input" id="task-name" placeholder='e.g., "Analyze 4-class monthly cancellation data"' autofocus>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Area</label>
+        <select class="form-select" id="task-area">
+          <option value="Work">Work</option>
+          <option value="Side Project">Side Project</option>
+          <option value="Personal">Personal</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input type="date" class="form-input" id="task-due">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Effort ⏱</label>
+        <select class="form-select" id="task-effort">
+          <option value="quick">Quick (&lt;30 min)</option>
+          <option value="medium" selected>Medium (1-2 hrs)</option>
+          <option value="big">Big (half day+)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Impact ★</label>
+        <select class="form-select" id="task-impact">
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="task-description" style="min-height:80px;" placeholder="What needs to be done, why it matters..."></textarea>
+    </div>
+
+    <button class="more-options-toggle" id="more-options-btn" onclick="toggleMoreOptions()">
+      <span class="toggle-arrow">▶</span> More options
+    </button>
+
+    <div class="more-options-section" id="more-options-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="task-category">
+            <option value="Operations">Operations</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Sales">Sales</option>
+            <option value="Finance">Finance</option>
+            <option value="Staffing">Staffing</option>
+            <option value="Front Desk">Front Desk</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Product">Product</option>
+            <option value="Legal">Legal</option>
+            <option value="Admin">Admin</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Urgency ⏰</label>
+          <select class="form-select" id="task-urgency">
+            <option value="today">Today</option>
+            <option value="this_week">This week</option>
+            <option value="this_month" selected>This month</option>
+            <option value="this_quarter">This quarter</option>
+            <option value="someday">Someday</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Estimated Time ⏱</label>
+        <select class="form-select" id="task-est-time">
+          <option value="15">15 min</option>
+          <option value="30">30 min</option>
+          <option value="45">45 min</option>
+          <option value="60" selected>1 hour</option>
+          <option value="90">1.5 hours</option>
+          <option value="120">2 hours</option>
+          <option value="180">3 hours</option>
+          <option value="240">4+ hours</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Research (optional)</label>
+        <textarea class="form-textarea" id="task-research" style="min-height:70px;" placeholder="Paste findings from Claude, links, data, meeting notes..."></textarea>
+      </div>
+    </div>
+
+    <!-- Priority promote/demote (shown when editing) -->
+    <div class="edit-priority-control" id="edit-priority-control" style="display:none;">
+      <div>
+        <div class="edit-priority-label">Priority</div>
+        <div class="edit-priority-display" id="edit-priority-display"></div>
+      </div>
+      <div class="edit-priority-arrows">
+        <button class="priority-arrow" onclick="editChangeImpact('down')" id="edit-down-btn" title="Decrease priority">▼</button>
+        <button class="priority-arrow" onclick="editChangeImpact('up')" id="edit-up-btn" title="Increase priority">▲</button>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn btn-primary" id="task-submit-btn" onclick="saveTask()">Create Task</button>
+      <button class="btn" onclick="closeTaskModal()">Cancel</button>
+    </div>
+
+    <div class="edit-actions-bar" id="edit-actions-bar" style="display:none;">
+      <button class="btn" onclick="completeFromEdit()" id="complete-edit-btn" style="color:var(--green);border-color:var(--green);">✓ Complete Task</button>
+      <button class="btn btn-danger" onclick="deleteFromEdit()">Delete Task</button>
+    </div>
+    <input type="hidden" id="editing-task-id" value="">
+  </div>
+</div>
 
 <!-- Welcome modal removed — users start with empty workspace -->
 
@@ -2053,7 +2105,8 @@ async function authAction() {
     currentUser = result.data.user;
     await initApp();
   } catch(e) {
-    errEl.textContent = 'Something went wrong. Please try again.';
+    console.error('Auth error:', e);
+    errEl.textContent = e.message || 'Something went wrong. Please try again.';
     errEl.style.display = 'block';
     btn.disabled = false;
     btn.textContent = authMode === 'signin' ? 'Sign In' : 'Sign Up';
@@ -2410,7 +2463,7 @@ function navigate(page) {
   if (page === 'ideas') renderIdeas();
   if (page === 'calendar') renderCalendar();
   if (page === 'settings') renderSettings();
-  if (page === 'add') resetAddForm();
+  if (page === 'add') { openTaskModal(); return; } // redirect to modal
   if (page === 'task-detail') renderTaskDetail();
 }
 
@@ -3367,7 +3420,9 @@ function saveTask() {
 
   setStore(store);
   document.getElementById('editing-task-id').value = '';
-  navigate('today');
+  closeTaskModal();
+  // Re-render current page
+  navigate(currentPage || 'today');
 }
 
 function editTask(id) {
@@ -3375,8 +3430,8 @@ function editTask(id) {
   const task = store.tasks.find(t => t.id === id);
   if (!task) return;
 
-  navigate('add');
-  document.getElementById('add-page-title').textContent = 'Edit Task';
+  resetAddForm();
+  document.getElementById('modal-task-title').textContent = 'Edit Task';
   document.getElementById('task-submit-btn').textContent = 'Save Changes';
   document.getElementById('editing-task-id').value = id;
   document.getElementById('task-name').value = task.name;
@@ -3389,15 +3444,21 @@ function editTask(id) {
   document.getElementById('task-due').value = task.due || '';
   document.getElementById('task-description').value = task.description || '';
   document.getElementById('task-research').value = task.research || '';
+  // Expand more options when editing (so all fields visible)
+  document.getElementById('more-options-section').classList.add('show');
+  document.getElementById('more-options-btn').classList.add('expanded');
   // Show edit-only actions
   document.getElementById('edit-actions-bar').style.display = 'flex';
+  // Open modal
+  document.getElementById('task-modal').classList.add('show');
+  setTimeout(() => document.getElementById('task-name').focus(), 50);
   document.getElementById('complete-edit-btn').textContent = task.completed ? '↩ Reopen Task' : '✓ Complete Task';
   document.getElementById('edit-priority-control').style.display = 'flex';
   updateEditPriorityDisplay();
 }
 
 function resetAddForm() {
-  document.getElementById('add-page-title').textContent = 'Add New Task';
+  document.getElementById('modal-task-title').textContent = 'New Task';
   document.getElementById('task-submit-btn').textContent = 'Create Task';
   document.getElementById('editing-task-id').value = '';
   document.getElementById('task-name').value = '';
@@ -3412,10 +3473,48 @@ function resetAddForm() {
   document.getElementById('task-research').value = '';
   document.getElementById('edit-actions-bar').style.display = 'none';
   document.getElementById('edit-priority-control').style.display = 'none';
+  // Collapse more options
+  document.getElementById('more-options-section').classList.remove('show');
+  document.getElementById('more-options-btn').classList.remove('expanded');
 }
 
+function openTaskModal(prefill) {
+  resetAddForm();
+  if (prefill) {
+    if (prefill.name) document.getElementById('task-name').value = prefill.name;
+    if (prefill.area) document.getElementById('task-area').value = prefill.area;
+    if (prefill.due) document.getElementById('task-due').value = prefill.due;
+  }
+  document.getElementById('task-modal').classList.add('show');
+  setTimeout(() => document.getElementById('task-name').focus(), 50);
+}
+
+function closeTaskModal() {
+  document.getElementById('task-modal').classList.remove('show');
+  document.getElementById('editing-task-id').value = '';
+}
+
+function toggleMoreOptions() {
+  const section = document.getElementById('more-options-section');
+  const btn = document.getElementById('more-options-btn');
+  section.classList.toggle('show');
+  btn.classList.toggle('expanded');
+}
+
+// Close modal on overlay click
+document.getElementById('task-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('task-modal')) closeTaskModal();
+});
+
+// Close modal on Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('task-modal').classList.contains('show')) {
+    closeTaskModal();
+  }
+});
+
 function cancelAddTask() {
-  navigate('today');
+  closeTaskModal();
 }
 
 function saveContext() {
@@ -3485,14 +3584,12 @@ function promoteIdea(id) {
   const idea = store.ideas.find(i => i.id === id);
   if (!idea) return;
 
-  // Pre-fill the add task form with the idea
-  navigate('add');
-  document.getElementById('task-name').value = idea.text;
-  document.getElementById('task-area').value = idea.area;
-
-  // Remove from ideas
+  // Remove from ideas first
   store.ideas = store.ideas.filter(i => i.id !== id);
   setStore(store);
+
+  // Open modal pre-filled with idea
+  openTaskModal({ name: idea.text, area: idea.area });
   toast('Idea promoted — fill in the details');
 }
 
@@ -3626,8 +3723,9 @@ function changeImpact(id, direction) {
 function completeFromEdit() {
   const editId = document.getElementById('editing-task-id').value;
   if (!editId) return;
+  closeTaskModal();
   toggleComplete(editId);
-  navigate('today');
+  navigate(currentPage || 'today');
 }
 
 let completedSectionOpen = false;
@@ -3644,8 +3742,9 @@ function deleteFromEdit() {
   const store = getStore();
   store.tasks = store.tasks.filter(t => t.id !== editId);
   setStore(store);
+  closeTaskModal();
   toast('Task deleted');
-  navigate('today');
+  navigate(currentPage || 'today');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -3779,11 +3878,7 @@ function renderCalendar() {
 }
 
 function calendarAddTask(dateStr) {
-  navigate('add');
-  setTimeout(() => {
-    const dueInput = document.getElementById('task-due');
-    if (dueInput) dueInput.value = dateStr;
-  }, 50);
+  openTaskModal({ due: dateStr });
 }
 
 // HELPERS
@@ -4282,7 +4377,7 @@ function clearAllData() {
 // Keyboard shortcut: N for new task
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-  if (e.key === 'n' || e.key === 'N') navigate('add');
+  if (e.key === 'n' || e.key === 'N') openTaskModal();
   if (e.key === '1') navigate('today');
   if (e.key === '2') navigate('tasks');
   if (e.key === '3') navigate('ideas');
@@ -4292,6 +4387,20 @@ document.addEventListener('keydown', (e) => {
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
+
+// Listen for auth state changes (handles token in URL hash, session refresh, etc.)
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+    currentUser = session.user;
+    await initApp();
+  }
+  if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    storeCache = null;
+    document.querySelector('.app').style.display = 'none';
+    document.getElementById('auth-screen').classList.remove('hidden');
+  }
+});
 
 // Check for existing session
 (async () => {

@@ -1369,10 +1369,6 @@
       <span>Today's Focus</span>
       <span class="nav-badge" id="today-badge">0</span>
     </div>
-    <div class="nav-item" data-page="schedule" onclick="navigate('schedule')">
-      <span class="nav-icon">🕐</span>
-      <span>Daily Schedule</span>
-    </div>
     <div class="nav-item" data-page="tasks" onclick="navigate('tasks')">
       <span class="nav-icon">☐</span>
       <span>All Tasks</span>
@@ -1397,14 +1393,6 @@
 
     <div class="sidebar-bottom">
       <div class="sidebar-divider"></div>
-      <div class="nav-item" data-page="claude" onclick="navigate('claude')">
-        <span class="nav-icon">📋</span>
-        <span>Copy for Claude</span>
-      </div>
-      <div class="nav-item" data-page="setup" onclick="navigate('setup')">
-        <span class="nav-icon">🚀</span>
-        <span>Setup Guide</span>
-      </div>
       <div class="nav-item" data-page="settings" onclick="navigate('settings')">
         <span class="nav-icon">⚙</span>
         <span>Settings</span>
@@ -1460,30 +1448,6 @@
         <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
           <button class="btn btn-primary btn-sm" onclick="saveQuickContext()">Save Context</button>
           <span style="font-size:12px; color:var(--text-secondary);">This feeds the prioritization engine</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════ -->
-    <!-- PAGE: DAILY SCHEDULE -->
-    <!-- ════════════════════════════════════ -->
-    <div class="page" id="page-schedule">
-      <div style="max-width:700px;">
-        <div class="schedule-header">
-          <div>
-            <div class="page-title">Daily Schedule</div>
-            <div class="page-subtitle" id="schedule-subtitle"></div>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="autoSchedule()">⚡ Auto-schedule</button>
-        </div>
-
-        <div class="schedule-summary" id="schedule-summary"></div>
-
-        <div id="time-blocks"></div>
-
-        <div class="unscheduled-section">
-          <div class="section-label">Unscheduled — drag into a time block above</div>
-          <div id="unscheduled-tasks"></div>
         </div>
       </div>
     </div>
@@ -1693,23 +1657,6 @@
     </div>
 
     <!-- ════════════════════════════════════ -->
-    <!-- PAGE: COPY FOR CLAUDE -->
-    <!-- ════════════════════════════════════ -->
-    <div class="page" id="page-claude">
-      <div style="max-width:700px;">
-        <div class="page-title">Copy for Claude</div>
-        <div class="page-subtitle">Formats your tasks + context into a prompt. Paste into Cowork for AI-powered prioritization.</div>
-
-        <div class="copy-block" id="claude-output"></div>
-
-        <div style="display:flex; gap:8px; margin-top:16px;">
-          <button class="btn btn-primary" onclick="copyForClaude()">📋 Copy to Clipboard</button>
-          <span style="font-size:12px; color:var(--text-secondary); line-height:36px;">Then paste into Cowork or Claude chat</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════ -->
     <!-- PAGE: WEEKLY REVIEW -->
     <!-- ════════════════════════════════════ -->
     <div class="page" id="page-review">
@@ -1725,17 +1672,6 @@
 
         <div class="divider"></div>
         <button class="btn btn-primary" onclick="toast('Review complete! Nice work.')">Finish Review</button>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════ -->
-    <!-- PAGE: SETUP GUIDE -->
-    <!-- ════════════════════════════════════ -->
-    <div class="page" id="page-setup">
-      <div style="max-width:600px;">
-        <div class="page-title">Setup Guide</div>
-        <div class="page-subtitle">Get the most out of Daily Signals in a few quick steps.</div>
-        <div id="setup-checklist"></div>
       </div>
     </div>
 
@@ -1829,33 +1765,6 @@
 
   </div><!-- /main -->
 </div><!-- /app -->
-
-<!-- Assign to time block modal -->
-<div class="modal-overlay" id="assign-modal">
-  <div class="modal">
-    <div class="modal-title" id="assign-modal-title">Schedule Task</div>
-    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;" id="assign-modal-task"></p>
-    <div class="assign-options">
-      <button class="assign-option" onclick="assignToBlock('morning')">
-        <span class="assign-option-icon">🌅</span>
-        <div><div class="assign-option-text">Morning</div><div class="assign-option-sub">8 AM – 12 PM</div></div>
-      </button>
-      <button class="assign-option" onclick="assignToBlock('midday')">
-        <span class="assign-option-icon">☀️</span>
-        <div><div class="assign-option-text">Midday</div><div class="assign-option-sub">12 PM – 2 PM</div></div>
-      </button>
-      <button class="assign-option" onclick="assignToBlock('afternoon')">
-        <span class="assign-option-icon">🌤</span>
-        <div><div class="assign-option-text">Afternoon</div><div class="assign-option-sub">2 PM – 5 PM</div></div>
-      </button>
-      <button class="assign-option" onclick="assignToBlock('evening')">
-        <span class="assign-option-icon">🌙</span>
-        <div><div class="assign-option-text">End of Day</div><div class="assign-option-sub">5 PM +</div></div>
-      </button>
-    </div>
-    <button class="btn" style="margin-top:12px; width:100%; justify-content:center;" onclick="closeAssignModal()">Cancel</button>
-  </div>
-</div>
 
 <!-- FAB -->
 <button class="fab" onclick="navigate('add')" title="Add Task">+</button>
@@ -2304,14 +2213,11 @@ function navigate(page) {
 
   // Render the page
   if (page === 'today') renderToday();
-  if (page === 'schedule') renderDailySchedule();
   if (page === 'tasks') renderAllTasks();
   if (page === 'context') renderContextFeed();
   if (page === 'ideas') renderIdeas();
-  if (page === 'claude') renderClaudeExport();
   if (page === 'review') renderWeeklyReview();
   if (page === 'settings') renderSettings();
-  if (page === 'setup') renderSetup();
   if (page === 'add') resetAddForm();
 }
 
@@ -2998,72 +2904,6 @@ function setIdeaFilter(area) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER: COPY FOR CLAUDE
-// ═══════════════════════════════════════════════════════════
-
-function renderClaudeExport() {
-  const store = getStore();
-  const tasks = store.tasks.filter(t => !t.completed);
-  const scored = tasks.map(t => ({ ...t, score: scoreTask(t, store) }));
-  scored.sort((a, b) => b.score - a.score);
-  const top = scored.slice(0, 20);
-
-  const urgencyLabels = { today: 'Today', this_week: 'This week', this_month: 'This month', this_quarter: 'This quarter', someday: 'Someday' };
-  const effortLabels = { quick: 'Quick', medium: 'Medium', big: 'Big' };
-
-  let output = `## My Active Tasks (${tasks.length} total, showing top ${top.length})\n\n`;
-
-  let currentImpact = '';
-  let num = 1;
-  for (const t of top) {
-    const impLabel = t.impact.toUpperCase() + ' IMPACT';
-    if (impLabel !== currentImpact) {
-      currentImpact = impLabel;
-      output += `### ${currentImpact}:\n`;
-    }
-    output += `${num}. ${t.name}\n`;
-    output += `   Area: ${t.area} | Category: ${t.category}\n`;
-    output += `   Urgency: ${urgencyLabels[t.urgency]} | Effort: ${effortLabels[t.effort]} | Est: ${formatMinutes(t.estMinutes || 60)}\n`;
-    if (t.due) {
-      const d = new Date(t.due + 'T00:00:00');
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (d < today) output += `   ⚠️ OVERDUE: ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}\n`;
-      else output += `   Due: ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}\n`;
-    }
-    if (t.notes) output += `   Context: "${t.notes}"\n`;
-    output += '\n';
-    num++;
-  }
-
-  output += `## Business Context Feed:\n`;
-  for (const c of store.context.sort((a, b) => b.created - a.created)) {
-    const d = new Date(c.created);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    output += `- [${dateStr}] ${c.area}: ${c.text}\n`;
-  }
-
-  output += `\n## What I need:\nPrioritize my top 5 tasks for today with reasoning.\nConsider business impact, urgency, and what compounds\nif delayed. Mix in one quick win for momentum.\nAlso flag any tasks I should consider archiving.`;
-
-  document.getElementById('claude-output').textContent = output;
-}
-
-function copyForClaude() {
-  const text = document.getElementById('claude-output').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    toast('Copied to clipboard!');
-  }).catch(() => {
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    toast('Copied to clipboard!');
-  });
-}
-
-// ═══════════════════════════════════════════════════════════
 // RENDER: WEEKLY REVIEW
 // ═══════════════════════════════════════════════════════════
 
@@ -3524,266 +3364,6 @@ function demoteFromToday(id) {
 }
 
 // ═══════════════════════════════════════════════════════════
-// DAILY SCHEDULE
-// ═══════════════════════════════════════════════════════════
-
-const TIME_BLOCKS = [
-  { key: 'morning', name: 'Morning', range: '8 AM – 12 PM', icon: '🌅', maxMinutes: 240 },
-  { key: 'midday', name: 'Midday', range: '12 PM – 2 PM', icon: '☀️', maxMinutes: 120 },
-  { key: 'afternoon', name: 'Afternoon', range: '2 PM – 5 PM', icon: '🌤', maxMinutes: 180 },
-  { key: 'evening', name: 'End of Day', range: '5 PM +', icon: '🌙', maxMinutes: 120 },
-];
-
-function getTodayKey() {
-  const d = new Date();
-  return d.toISOString().split('T')[0];
-}
-
-function getDaySchedule(store) {
-  const key = getTodayKey();
-  if (!store.dailySchedule) store.dailySchedule = {};
-  if (!store.dailySchedule[key]) {
-    store.dailySchedule[key] = { morning: [], midday: [], afternoon: [], evening: [] };
-  }
-  return store.dailySchedule[key];
-}
-
-let assigningTaskId = null;
-
-function openAssignModal(taskId) {
-  assigningTaskId = taskId;
-  const store = getStore();
-  const task = store.tasks.find(t => t.id === taskId);
-  document.getElementById('assign-modal-task').textContent = task ? task.name : '';
-  document.getElementById('assign-modal').classList.add('show');
-}
-
-function closeAssignModal() {
-  assigningTaskId = null;
-  document.getElementById('assign-modal').classList.remove('show');
-}
-
-function assignToBlock(blockKey) {
-  if (!assigningTaskId) return;
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-
-  // Remove from any existing block
-  for (const bk of Object.keys(schedule)) {
-    schedule[bk] = schedule[bk].filter(id => id !== assigningTaskId);
-  }
-  schedule[blockKey].push(assigningTaskId);
-  setStore(store);
-  closeAssignModal();
-  toast('Scheduled');
-  renderDailySchedule();
-}
-
-function unscheduleTask(taskId) {
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-  for (const bk of Object.keys(schedule)) {
-    schedule[bk] = schedule[bk].filter(id => id !== taskId);
-  }
-  setStore(store);
-  toast('Unscheduled');
-  renderDailySchedule();
-}
-
-function autoSchedule() {
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-  const top = getTopTasks(store, 8);
-
-  // Clear existing schedule
-  for (const bk of Object.keys(schedule)) { schedule[bk] = []; }
-
-  // Fill blocks by priority, respecting time limits
-  const blockTimes = { morning: 0, midday: 0, afternoon: 0, evening: 0 };
-  const blockLimits = { morning: 240, midday: 120, afternoon: 180, evening: 120 };
-  const blockOrder = ['morning', 'midday', 'afternoon', 'evening'];
-
-  for (const task of top) {
-    const mins = task.estMinutes || 60;
-    for (const bk of blockOrder) {
-      if (blockTimes[bk] + mins <= blockLimits[bk]) {
-        schedule[bk].push(task.id);
-        blockTimes[bk] += mins;
-        break;
-      }
-    }
-  }
-
-  setStore(store);
-  toast('Auto-scheduled based on priority');
-  renderDailySchedule();
-}
-
-function renderDailySchedule() {
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-  setStore(store); // ensure schedule obj is persisted
-
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  document.getElementById('schedule-subtitle').textContent = dateStr;
-
-  // Calc totals
-  let totalScheduled = 0;
-  let totalTasks = 0;
-  const allScheduledIds = [];
-  for (const block of TIME_BLOCKS) {
-    const ids = schedule[block.key] || [];
-    allScheduledIds.push(...ids);
-    for (const id of ids) {
-      const task = store.tasks.find(t => t.id === id);
-      if (task && !task.completed) {
-        totalScheduled += (task.estMinutes || 60);
-        totalTasks++;
-      }
-    }
-  }
-
-  document.getElementById('schedule-summary').innerHTML = `
-    <div class="schedule-stat">
-      <div class="schedule-stat-num">${totalTasks}</div>
-      <div class="schedule-stat-label">Tasks scheduled</div>
-    </div>
-    <div class="schedule-stat">
-      <div class="schedule-stat-num">${formatMinutes(totalScheduled)}</div>
-      <div class="schedule-stat-label">Total time</div>
-    </div>
-    <div class="schedule-stat">
-      <div class="schedule-stat-num">${formatMinutes(Math.max(0, 480 - totalScheduled))}</div>
-      <div class="schedule-stat-label">Time remaining (8hr day)</div>
-    </div>
-  `;
-
-  // Render time blocks
-  let blocksHtml = '';
-  for (const block of TIME_BLOCKS) {
-    const ids = schedule[block.key] || [];
-    let blockMinutes = 0;
-    let tasksHtml = '';
-
-    for (const id of ids) {
-      const task = store.tasks.find(t => t.id === id);
-      if (!task || task.completed) continue;
-      const mins = task.estMinutes || 60;
-      blockMinutes += mins;
-      const areaTag = `<span class="tag tag-${AREA_COLORS[task.area]}" style="font-size:10px;">${task.area}</span>`;
-      tasksHtml += `
-        <div class="schedule-task-card">
-          <div class="task-checkbox${task.completed ? ' checked' : ''}" onclick="toggleComplete('${task.id}')" style="width:18px;height:18px;"></div>
-          <div style="flex:1;min-width:0;">
-            <div class="schedule-task-name">${escHtml(task.name)}</div>
-            <div class="schedule-task-meta">${areaTag} <span class="time-est-badge">⏱ ${formatMinutes(mins)}</span></div>
-          </div>
-          <span class="schedule-remove" onclick="unscheduleTask('${task.id}')" title="Remove from schedule">✕</span>
-        </div>
-      `;
-    }
-
-    const totalClass = blockMinutes > block.maxMinutes ? 'time-block-total over' : 'time-block-total';
-
-    blocksHtml += `
-      <div class="time-block">
-        <div class="time-block-header">
-          <span>${block.icon}</span>
-          <span class="time-block-name">${block.name}</span>
-          <span class="time-block-range">${block.range}</span>
-          <span class="${totalClass}">${blockMinutes > 0 ? formatMinutes(blockMinutes) + ' scheduled' : 'Empty'}</span>
-        </div>
-        ${tasksHtml}
-        <div class="time-block-drop" onclick="openAssignModalForBlock('${block.key}')">
-          + Add task to ${block.name.toLowerCase()}
-        </div>
-      </div>
-    `;
-  }
-  document.getElementById('time-blocks').innerHTML = blocksHtml;
-
-  // Unscheduled tasks (top priorities not yet scheduled)
-  const activeTasks = store.tasks.filter(t => !t.completed);
-  const scored = activeTasks.map(t => ({ ...t, score: scoreTask(t, store) }));
-  scored.sort((a, b) => b.score - a.score);
-  const unscheduled = scored.filter(t => !allScheduledIds.includes(t.id)).slice(0, 10);
-
-  if (unscheduled.length === 0) {
-    document.getElementById('unscheduled-tasks').innerHTML = '<div class="empty-state" style="padding:20px;"><div class="empty-state-text">All top tasks are scheduled!</div></div>';
-  } else {
-    document.getElementById('unscheduled-tasks').innerHTML = unscheduled.map(t => {
-      const areaTag = `<span class="tag tag-${AREA_COLORS[t.area]}" style="font-size:10px;">${t.area}</span>`;
-      return `
-        <div class="schedule-task-card" style="cursor:pointer;" onclick="openAssignModal('${t.id}')">
-          <div style="flex:1;min-width:0;">
-            <div class="schedule-task-name">${escHtml(t.name)}</div>
-            <div class="schedule-task-meta">${areaTag} <span class="time-est-badge">⏱ ${formatMinutes(t.estMinutes || 60)}</span> <span class="meta-text">Score: ${t.score}</span></div>
-          </div>
-          <span style="color:var(--accent);font-size:12px;font-weight:600;">Schedule →</span>
-        </div>
-      `;
-    }).join('');
-  }
-}
-
-function openAssignModalForBlock(blockKey) {
-  // Show unscheduled tasks, clicking one assigns it to the block
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-  const allScheduledIds = [];
-  for (const bk of Object.keys(schedule)) allScheduledIds.push(...schedule[bk]);
-
-  const activeTasks = store.tasks.filter(t => !t.completed && !allScheduledIds.includes(t.id));
-  const scored = activeTasks.map(t => ({ ...t, score: scoreTask(t, store) }));
-  scored.sort((a, b) => b.score - a.score);
-  const top = scored.slice(0, 8);
-
-  if (top.length === 0) { toast('No unscheduled tasks available'); return; }
-
-  // Use the assign modal but wire it to auto-assign to this block
-  const blockNames = { morning: 'Morning', midday: 'Midday', afternoon: 'Afternoon', evening: 'End of Day' };
-  document.getElementById('assign-modal-title').textContent = `Add to ${blockNames[blockKey]}`;
-  document.getElementById('assign-modal-task').textContent = 'Pick a task:';
-
-  const optionsHtml = top.map(t => {
-    const mins = t.estMinutes || 60;
-    return `<button class="assign-option" onclick="quickAssign('${t.id}','${blockKey}')">
-      <div style="flex:1;"><div class="assign-option-text">${escHtml(t.name)}</div><div class="assign-option-sub">${t.area} · ${formatMinutes(mins)}</div></div>
-    </button>`;
-  }).join('');
-
-  document.querySelector('.assign-options').innerHTML = optionsHtml;
-  document.getElementById('assign-modal').classList.add('show');
-}
-
-function quickAssign(taskId, blockKey) {
-  const store = getStore();
-  const schedule = getDaySchedule(store);
-  // Remove from any block first
-  for (const bk of Object.keys(schedule)) {
-    schedule[bk] = schedule[bk].filter(id => id !== taskId);
-  }
-  schedule[blockKey].push(taskId);
-  setStore(store);
-  closeAssignModal();
-  // Restore default modal content
-  restoreAssignModal();
-  toast('Scheduled');
-  renderDailySchedule();
-}
-
-function restoreAssignModal() {
-  document.getElementById('assign-modal-title').textContent = 'Schedule Task';
-  document.querySelector('.assign-options').innerHTML = `
-    <button class="assign-option" onclick="assignToBlock('morning')"><span class="assign-option-icon">🌅</span><div><div class="assign-option-text">Morning</div><div class="assign-option-sub">8 AM – 12 PM</div></div></button>
-    <button class="assign-option" onclick="assignToBlock('midday')"><span class="assign-option-icon">☀️</span><div><div class="assign-option-text">Midday</div><div class="assign-option-sub">12 PM – 2 PM</div></div></button>
-    <button class="assign-option" onclick="assignToBlock('afternoon')"><span class="assign-option-icon">🌤</span><div><div class="assign-option-text">Afternoon</div><div class="assign-option-sub">2 PM – 5 PM</div></div></button>
-    <button class="assign-option" onclick="assignToBlock('evening')"><span class="assign-option-icon">🌙</span><div><div class="assign-option-text">End of Day</div><div class="assign-option-sub">5 PM +</div></div></button>
-  `;
-}
-
-// ═══════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 
@@ -3797,7 +3377,6 @@ function formatMinutes(mins) {
 
 function renderCurrentPage() {
   if (currentPage === 'today') renderToday();
-  else if (currentPage === 'schedule') renderDailySchedule();
   else if (currentPage === 'tasks') renderAllTasks();
   else if (currentPage === 'context') renderContextFeed();
   else if (currentPage === 'ideas') renderIdeas();
@@ -3876,100 +3455,6 @@ function initTheme() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// RENDER: SETUP GUIDE
-// ═══════════════════════════════════════════════════════════
-
-function renderSetup() {
-  const store = getStore();
-  const settings = getSettingsData();
-
-  const steps = [
-    {
-      key: 'areas',
-      title: 'Set up your Areas',
-      desc: 'Areas are the big buckets of your life — like "Work", "Side Project", and "Personal". Customize them in Settings to match your world.',
-      done: settings.areas.length > 0 && settings.areas.some(a => a.name !== 'Work'),
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
-    },
-    {
-      key: 'categories',
-      title: 'Add categories to your Areas',
-      desc: 'Categories organize tasks within each Area — things like Marketing, Operations, Engineering, Finance. Add them under each Area in Settings.',
-      done: settings.areas.some(a => (a.categories || []).length > 4),
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
-    },
-    {
-      key: 'firstTask',
-      title: 'Create your first task',
-      desc: 'Use the quick-add bar at the top of Today\'s Focus, or hit the + button to add a detailed task.',
-      done: store.tasks && store.tasks.length > 0,
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('today')">Go to Today's Focus</button>`
-    },
-    {
-      key: 'import',
-      title: 'Import tasks from Asana (optional)',
-      desc: 'Already using Asana? Export your tasks as a CSV, then upload it in Settings under "Import from Asana".',
-      done: store.tasks && store.tasks.length >= 10,
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Import</button>`
-    },
-    {
-      key: 'recurring',
-      title: 'Set up a recurring task',
-      desc: 'Weekly reports, daily standups, monthly reviews — expand any task and set its recurrence to daily, weekly, or monthly.',
-      done: store.tasks && store.tasks.some(t => t.recurrence),
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('today')">Add a recurring task</button>`
-    },
-    {
-      key: 'idea',
-      title: 'Capture an idea',
-      desc: 'Got something that isn\'t a task yet? Drop it in the Ideas section so it doesn\'t get lost.',
-      done: store.ideas && store.ideas.length > 0,
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('ideas')">Go to Ideas</button>`
-    },
-    {
-      key: 'theme',
-      title: 'Pick your theme',
-      desc: 'Light or dark — your call. Find it in Settings under Appearance.',
-      done: true, // always "done" since there's a default
-      action: `<button class="btn btn-primary btn-sm" onclick="navigate('settings')">Go to Settings</button>`
-    }
-  ];
-
-  const doneCount = steps.filter(s => s.done).length;
-  const pct = Math.round((doneCount / steps.length) * 100);
-
-  let html = `
-    <div style="margin-bottom:24px;">
-      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-secondary); margin-bottom:6px;">
-        <span>${doneCount} of ${steps.length} complete</span>
-        <span>${pct}%</span>
-      </div>
-      <div style="height:6px; background:var(--hover-bg); border-radius:3px; overflow:hidden;">
-        <div style="height:100%; width:${pct}%; background:var(--accent); border-radius:3px; transition:width 0.3s;"></div>
-      </div>
-    </div>
-  `;
-
-  for (const step of steps) {
-    const checkIcon = step.done
-      ? '<span style="color:var(--green); font-size:18px; margin-right:12px;">✓</span>'
-      : '<span style="color:var(--text-secondary); font-size:18px; margin-right:12px; opacity:0.4;">○</span>';
-    const opacity = step.done ? 'opacity:0.6;' : '';
-    html += `
-      <div class="settings-card" style="${opacity} display:flex; align-items:flex-start; gap:0;">
-        <div style="padding-top:2px;">${checkIcon}</div>
-        <div style="flex:1;">
-          <div style="font-weight:600; font-size:14px; margin-bottom:4px;">${step.title}</div>
-          <div style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">${step.desc}</div>
-          ${step.done ? '' : step.action}
-        </div>
-      </div>
-    `;
-  }
-
-  document.getElementById('setup-checklist').innerHTML = html;
-}
-
 function renderSettings() {
   const settings = getSettingsData();
   const colorMap = {
@@ -4378,10 +3863,9 @@ document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
   if (e.key === 'n' || e.key === 'N') navigate('add');
   if (e.key === '1') navigate('today');
-  if (e.key === '2') navigate('schedule');
-  if (e.key === '3') navigate('tasks');
-  if (e.key === '4') navigate('ideas');
-  if (e.key === '5') navigate('context');
+  if (e.key === '2') navigate('tasks');
+  if (e.key === '3') navigate('ideas');
+  if (e.key === '4') navigate('context');
 });
 
 // ═══════════════════════════════════════════════════════════

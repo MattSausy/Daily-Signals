@@ -1919,8 +1919,8 @@
 // ═══════════════════════════════════════════════════════════
 
 const SUPABASE_URL = 'https://poktppwdpnyyaqqzfklr.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_I02MbZ39JiRh8T5dffSv-w_HSVyUuCH';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBva3RwcHdkcG55eWFxcXpma2xyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNjY5MDksImV4cCI6MjA5MTk0MjkwOX0.MVwLE4MBJDiTUkI7QLGc9jAYtchp3Qgh-TRsco6eq1Q';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
 let storeCache = null; // Local cache to avoid constant DB reads
@@ -1966,9 +1966,9 @@ async function authAction() {
   try {
     let result;
     if (authMode === 'signup') {
-      result = await supabase.auth.signUp({ email, password });
+      result = await sb.auth.signUp({ email, password });
     } else {
-      result = await supabase.auth.signInWithPassword({ email, password });
+      result = await sb.auth.signInWithPassword({ email, password });
     }
 
     if (result.error) {
@@ -1998,7 +1998,7 @@ async function authAction() {
 }
 
 async function signOut() {
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   currentUser = null;
   storeCache = null;
   document.getElementById('auth-screen').classList.remove('hidden');
@@ -2140,7 +2140,7 @@ function setStore(store) {
 async function loadStoreFromCloud() {
   if (!currentUser) return null;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from('user_data')
       .select('store_json')
       .eq('user_id', currentUser.id)
@@ -2167,7 +2167,7 @@ async function loadStoreFromCloud() {
 async function saveStoreToCloud(store) {
   if (!currentUser) return;
   try {
-    const { error } = await supabase
+    const { error } = await sb
       .from('user_data')
       .upsert({
         user_id: currentUser.id,
@@ -4322,7 +4322,7 @@ document.addEventListener('keydown', (e) => {
 
 // Check for existing session
 (async () => {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
     await initApp();

@@ -569,27 +569,53 @@
   }
   .more-options-section.show { display: block; }
 
-  /* ═══ ADD TASK BUTTON (floating) ═══ */
-  .fab {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(200,150,90,0.3);
+  /* ═══ ADD TASK BUTTON (Asana-style) ═══ */
+  .add-task-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: transform 0.15s, box-shadow 0.15s;
-    z-index: 100;
+    gap: 8px;
+    padding-bottom: 20px;
+    margin: -12px 0 0 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 50;
+    padding-top: 12px;
   }
-  .fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(200,150,90,0.4); }
+  .add-task-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  .add-task-btn:hover {
+    background: var(--hover-bg);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
+  }
+  .add-task-btn .add-icon {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .add-task-btn .chevron {
+    font-size: 9px;
+    color: var(--text-secondary);
+    margin-left: 2px;
+    border-left: 1px solid var(--border);
+    padding-left: 8px;
+  }
 
   /* ═══ DAILY SCHEDULE ═══ */
   .schedule-header {
@@ -1410,12 +1436,12 @@
   }
   .quick-capture-input {
     flex: 1;
-    padding: 12px 16px;
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
     background: var(--card-bg);
     color: var(--text);
-    font-size: 14px;
+    font-size: 13px;
     font-family: inherit;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -1429,14 +1455,14 @@
     color: var(--text-secondary);
   }
   .quick-capture-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: white;
-    font-size: 22px;
-    font-weight: 300;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--accent);
+    font-size: 20px;
+    font-weight: 400;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1445,8 +1471,8 @@
     flex-shrink: 0;
   }
   .quick-capture-btn:hover {
-    background: var(--accent-hover);
-    transform: scale(1.08);
+    background: var(--hover-bg);
+    border-color: var(--accent);
   }
 
   /* Recurrence Badge */
@@ -1616,6 +1642,12 @@
 
   <!-- ═══ MAIN ═══ -->
   <div class="main">
+
+    <div class="add-task-bar">
+      <button class="add-task-btn" onclick="openTaskModal()" title="Add Task (N)">
+        <span class="add-icon">+</span> Add task <span class="chevron">▾</span>
+      </button>
+    </div>
 
     <!-- ════════════════════════════════════ -->
     <!-- PAGE: TODAY'S FOCUS -->
@@ -1868,8 +1900,7 @@
   </div><!-- /main -->
 </div><!-- /app -->
 
-<!-- FAB -->
-<button class="fab" onclick="openTaskModal()" title="Add Task (N)">+</button>
+<!-- FAB removed — add task button is now inline in the header -->
 
 <!-- TASK MODAL -->
 <div class="modal-overlay" id="task-modal">

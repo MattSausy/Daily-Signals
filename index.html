@@ -747,6 +747,95 @@
   }
   .task-detail-name-link:hover { color: var(--accent); }
 
+  /* ═══ WEEKLY CALENDAR ═══ */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    min-height: 500px;
+  }
+  .calendar-day {
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+  }
+  .calendar-day-header {
+    padding: 10px 10px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .calendar-day-header .cal-date {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    text-transform: none;
+  }
+  .calendar-day.is-today .calendar-day-header {
+    background: var(--accent);
+    color: #fff;
+  }
+  .calendar-day.is-today .calendar-day-header .cal-date { color: #fff; }
+  .calendar-day.is-today .calendar-day-header .cal-day-name { color: rgba(255,255,255,0.8); }
+  .calendar-day-tasks {
+    flex: 1;
+    padding: 6px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .calendar-task {
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.3;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    background: var(--hover-bg);
+    transition: background 0.15s;
+  }
+  .calendar-task:hover { background: var(--border); }
+  .calendar-task .cal-task-name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .calendar-task .cal-task-meta {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .calendar-task.completed .cal-task-name {
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+  .calendar-add-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    border-radius: 4px;
+    margin-top: auto;
+  }
+  .calendar-add-btn:hover { background: var(--hover-bg); color: var(--accent); }
+
   /* ═══ CLEAN TASK ROW ═══ */
   .task-row {
     display: flex;
@@ -1455,6 +1544,10 @@
       <span>All Tasks</span>
       <span class="nav-badge" id="tasks-badge">0</span>
     </div>
+    <div class="nav-item" data-page="calendar" onclick="navigate('calendar')">
+      <span class="nav-icon">📅</span>
+      <span>Calendar</span>
+    </div>
     <div class="nav-item" data-page="ideas" onclick="navigate('ideas')">
       <span class="nav-icon">★</span>
       <span>Parking Lot</span>
@@ -1700,6 +1793,27 @@
       <div class="filters" id="impact-filters"></div>
 
       <div id="all-tasks-list"></div>
+    </div>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- PAGE: CALENDAR -->
+    <!-- ════════════════════════════════════ -->
+    <div class="page" id="page-calendar">
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div class="page-title" style="margin:0;">Calendar</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn btn-sm" onclick="calendarNav(-1)">←</button>
+            <button class="btn btn-sm" onclick="calendarGoToday()">Today</button>
+            <button class="btn btn-sm" onclick="calendarNav(1)">→</button>
+            <span id="calendar-week-label" style="font-size:14px; font-weight:600; min-width:140px; text-align:center;"></span>
+          </div>
+          <div style="font-size:12px; color:var(--text-secondary);">
+            <span id="calendar-no-date-count"></span>
+          </div>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </div>
     </div>
 
     <!-- ════════════════════════════════════ -->
@@ -2294,6 +2408,7 @@ function navigate(page) {
   if (page === 'tasks') renderAllTasks();
   if (page === 'context') renderContextFeed();
   if (page === 'ideas') renderIdeas();
+  if (page === 'calendar') renderCalendar();
   if (page === 'settings') renderSettings();
   if (page === 'add') resetAddForm();
   if (page === 'task-detail') renderTaskDetail();
@@ -2375,6 +2490,23 @@ function renderTaskDetail() {
       </div>
     </div>
 
+    <div class="task-detail-section-label">Assigned To</div>
+    <div class="task-detail-meta" style="margin:8px 0 0;">
+      <div class="task-detail-field">
+        <label>Name</label>
+        <input type="text" value="${escAttr(task.assignee || '')}" placeholder="e.g. Jennifer"
+          onchange="detailUpdateField('${task.id}','assignee',this.value)">
+      </div>
+      <div class="task-detail-field">
+        <label>Email</label>
+        <input type="email" value="${escAttr(task.assigneeEmail || '')}" placeholder="email@example.com"
+          onchange="detailUpdateField('${task.id}','assigneeEmail',this.value)">
+      </div>
+      <div class="task-detail-field" style="display:flex;align-items:flex-end;">
+        ${task.assigneeEmail ? `<button class="btn btn-primary btn-sm" onclick="sendAssignmentEmail('${task.id}')" style="width:100%;">✉ Send Assignment</button>` : '<div style="font-size:11px;color:var(--text-secondary);padding-bottom:10px;">Add an email to send</div>'}
+      </div>
+    </div>
+
     <div class="task-detail-section-label">Description</div>
     <textarea class="task-detail-textarea" placeholder="What needs to be done, why it matters, any relevant details..."
       onchange="detailUpdateField('${task.id}','description',this.value)">${escHtml(task.description || '')}</textarea>
@@ -2402,6 +2534,35 @@ function detailUpdateField(id, field, value) {
 function detailComplete(id) {
   toggleComplete(id);
   navigateBack();
+}
+
+function sendAssignmentEmail(taskId) {
+  const store = getStore();
+  const task = store.tasks.find(t => t.id === taskId);
+  if (!task || !task.assigneeEmail) {
+    toast('Add an email address first');
+    return;
+  }
+  const name = task.assignee || 'there';
+  const due = task.due ? new Date(task.due + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'No due date';
+  const area = task.area || '';
+  const desc = task.description || '';
+
+  const subject = encodeURIComponent(`Task assigned: ${task.name}`);
+  const body = encodeURIComponent(
+    `Hey ${name},\n\n` +
+    `I've assigned you a task in Daily Signals:\n\n` +
+    `Task: ${task.name}\n` +
+    `Area: ${area}\n` +
+    `Due: ${due}\n` +
+    `Priority: ${(task.impact || 'medium').charAt(0).toUpperCase() + (task.impact || 'medium').slice(1)}\n` +
+    (desc ? `\nDetails:\n${desc}\n` : '') +
+    `\nLog in to Daily Signals to view and update it:\nhttps://mattsausy.github.io\n\n` +
+    `Thanks!`
+  );
+
+  window.open(`mailto:${task.assigneeEmail}?subject=${subject}&body=${body}`, '_self');
+  toast('Opening email client...');
 }
 
 function filterByArea(area) {
@@ -2597,6 +2758,10 @@ function renderCleanTaskRow(task) {
     details.push(`<span class="recurrence-badge">↻ ${task.recurrence.type}</span>`);
   }
 
+  if (task.assignee) {
+    details.push(`<span style="font-size:11px;color:var(--text-secondary);">→ ${escHtml(task.assignee)}</span>`);
+  }
+
   // Fun priority boost buttons
   const impactLevels = ['low','medium','high','critical'];
   const currentIdx = impactLevels.indexOf(imp);
@@ -2674,6 +2839,14 @@ function renderCleanTaskRow(task) {
               <option value="monthly"${task.recurrence?.type==='monthly' ? ' selected' : ''}>Monthly</option>
             </select>
           </div>
+          <div class="inline-edit-field">
+            <div class="expand-detail-label">Assigned To</div>
+            <input type="text" class="inline-edit-input" value="${escAttr(task.assignee || '')}" placeholder="Name" onchange="inlineUpdateField('${task.id}','assignee',this.value)" onclick="event.stopPropagation()">
+          </div>
+          <div class="inline-edit-field">
+            <div class="expand-detail-label">Their Email</div>
+            <input type="email" class="inline-edit-input" value="${escAttr(task.assigneeEmail || '')}" placeholder="email@example.com" onchange="inlineUpdateField('${task.id}','assigneeEmail',this.value)" onclick="event.stopPropagation()">
+          </div>
         </div>
         <div class="expand-detail-grid" style="margin-top:12px;">
           <div class="expand-detail-block">
@@ -2688,6 +2861,7 @@ function renderCleanTaskRow(task) {
         <div class="expand-actions">
           <button class="btn btn-sm" onclick="event.stopPropagation();completeWithConfetti(event,'${task.id}')" style="color:var(--green);border-color:var(--green);">✓ Complete</button>
           <button class="btn btn-sm" onclick="event.stopPropagation();togglePin('${task.id}')">${pinIcon} ${pinLabel}</button>
+          ${task.assigneeEmail ? `<button class="btn btn-sm" onclick="event.stopPropagation();sendAssignmentEmail('${task.id}')" style="color:var(--accent);border-color:var(--accent);">✉ Send Assignment</button>` : ''}
           <button class="btn btn-sm" onclick="event.stopPropagation();openTaskDetail('${task.id}')" style="color:var(--accent);border-color:var(--accent);">↗ Full View</button>
           <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();archiveTask('${task.id}')">Archive</button>
         </div>
@@ -3495,6 +3669,123 @@ function demoteFromToday(id) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// CALENDAR (WEEKLY VIEW)
+// ═══════════════════════════════════════════════════════════
+
+let calendarWeekStart = null; // Sunday of current displayed week
+
+function getWeekStart(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - d.getDay()); // back to Sunday
+  return d;
+}
+
+function calendarNav(direction) {
+  if (!calendarWeekStart) calendarWeekStart = getWeekStart(new Date());
+  calendarWeekStart.setDate(calendarWeekStart.getDate() + direction * 7);
+  renderCalendar();
+}
+
+function calendarGoToday() {
+  calendarWeekStart = getWeekStart(new Date());
+  renderCalendar();
+}
+
+function renderCalendar() {
+  if (!calendarWeekStart) calendarWeekStart = getWeekStart(new Date());
+  const store = getStore();
+  const tasks = store.tasks.filter(t => !t.completed);
+  const completedTasks = store.tasks.filter(t => t.completed);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Week label
+  const weekEnd = new Date(calendarWeekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const startMonth = monthNames[calendarWeekStart.getMonth()];
+  const endMonth = monthNames[weekEnd.getMonth()];
+  let label = '';
+  if (calendarWeekStart.getMonth() === weekEnd.getMonth()) {
+    label = `${startMonth} ${calendarWeekStart.getDate()} – ${weekEnd.getDate()}, ${calendarWeekStart.getFullYear()}`;
+  } else {
+    label = `${startMonth.slice(0,3)} ${calendarWeekStart.getDate()} – ${endMonth.slice(0,3)} ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`;
+  }
+  document.getElementById('calendar-week-label').textContent = label;
+
+  // Count tasks with no due date
+  const noDateCount = tasks.filter(t => !t.due).length;
+  document.getElementById('calendar-no-date-count').textContent = noDateCount > 0 ? `No date (${noDateCount})` : '';
+
+  // Build grid
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(calendarWeekStart);
+    day.setDate(day.getDate() + i);
+    const dayStr = day.toISOString().split('T')[0];
+    const isToday = day.getTime() === today.getTime();
+
+    // Tasks due on this day
+    const dayTasks = tasks.filter(t => t.due === dayStr);
+    const dayCompleted = completedTasks.filter(t => t.due === dayStr);
+    const allDayTasks = [...dayTasks, ...dayCompleted];
+
+    // Sort: incomplete first (by priority), then completed
+    const impOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    dayTasks.sort((a, b) => (impOrder[a.impact] || 2) - (impOrder[b.impact] || 2));
+
+    const colorMap = {
+      'red': 'var(--red)', 'blue': 'var(--blue)', 'green': 'var(--green)',
+      'purple': 'var(--purple)', 'orange': 'var(--orange)'
+    };
+
+    let tasksHtml = '';
+    for (const t of dayTasks) {
+      const borderColor = colorMap[AREA_COLORS[t.area]] || '#999';
+      const assignee = t.assignee ? `<span> · → ${escHtml(t.assignee)}</span>` : '';
+      tasksHtml += `
+        <div class="calendar-task" style="border-left-color:${borderColor};" onclick="openTaskDetail('${t.id}')">
+          <div class="cal-task-name">${escHtml(t.name)}</div>
+          <div class="cal-task-meta">${escHtml(t.area)}${assignee}</div>
+        </div>
+      `;
+    }
+    for (const t of dayCompleted.slice(0, 3)) {
+      tasksHtml += `
+        <div class="calendar-task completed" style="border-left-color:#ccc;" onclick="openTaskDetail('${t.id}')">
+          <div class="cal-task-name">${escHtml(t.name)}</div>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="calendar-day${isToday ? ' is-today' : ''}">
+        <div class="calendar-day-header">
+          <span class="cal-day-name">${dayNames[i]}</span>
+          <span class="cal-date">${day.getDate()}</span>
+        </div>
+        <div class="calendar-day-tasks">
+          ${tasksHtml}
+          <div class="calendar-add-btn" onclick="calendarAddTask('${dayStr}')">+ Add task</div>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('calendar-grid').innerHTML = html;
+}
+
+function calendarAddTask(dateStr) {
+  navigate('add');
+  setTimeout(() => {
+    const dueInput = document.getElementById('task-due');
+    if (dueInput) dueInput.value = dateStr;
+  }, 50);
+}
+
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 

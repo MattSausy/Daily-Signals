@@ -4504,14 +4504,15 @@ sb.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Check for existing session
+// Check for existing session (only if onAuthStateChange hasn't already initialized)
 (async () => {
+  if (appInitialized) return;
   const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
+  if (session?.user && !appInitialized) {
     currentUser = session.user;
     appInitialized = true;
     await initApp();
-  } else {
+  } else if (!appInitialized) {
     document.querySelector('.app').style.display = 'none';
     document.getElementById('auth-screen').classList.remove('hidden');
   }

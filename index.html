@@ -2069,6 +2069,7 @@ let currentUser = null;
 let storeCache = null; // Local cache to avoid constant DB reads
 let savePending = false;
 let saveTimer = null;
+let cloudDataLoaded = false; // Safety flag: only save to cloud if we successfully loaded first
 
 // ═══════════════════════════════════════════════════════════
 // AUTH FUNCTIONS
@@ -2147,10 +2148,15 @@ async function signOut() {
   } catch(e) {
     console.error('Sign out error:', e);
   }
+  // Force clear all local state regardless of whether signOut succeeded
   currentUser = null;
   storeCache = null;
+  cloudDataLoaded = false;
+  localStorage.removeItem(STORAGE_KEY);
   document.getElementById('auth-screen').classList.remove('hidden');
   document.querySelector('.app').style.display = 'none';
+  // Force reload to clear any stale session tokens
+  window.location.reload();
 }
 
 async function initApp() {
@@ -2162,6 +2168,9 @@ async function initApp() {
 
   if (!storeCache) {
     storeCache = emptyStore();
+    console.warn('No data loaded from cloud or localStorage — starting with empty store. Cloud saves are BLOCKED until real data is loaded.');
+  } else {
+    cloudDataLoaded = true;
   }
 
   const emailDisplay = document.getElementById('user-email-display');
@@ -2254,6 +2263,16 @@ async function loadStoreFromCloud() {
     }
     if (error) {
       console.error('Load error:', error);
+      // If auth-related error, try refreshing the session
+      if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.code === '401') {
+        console.warn('Auth token may be expired, attempting refresh...');
+        const { data: refreshData } = await sb.auth.refreshSession();
+        if (refreshData?.session) {
+          // Retry the load with refreshed session
+          const retry = await sb.from('user_data').select('store_json').eq('user_id', currentUser.id).single();
+          if (!retry.error && retry.data) return retry.data.store_json;
+        }
+      }
       // Fall back to localStorage
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
@@ -2268,6 +2287,11 @@ async function loadStoreFromCloud() {
 
 async function saveStoreToCloud(store) {
   if (!currentUser) return;
+  // Safety: never overwrite cloud data if we failed to load it initially
+  if (!cloudDataLoaded) {
+    console.warn('BLOCKED: Refusing to save to cloud — data was never successfully loaded. Sign out and sign back in.');
+    return;
+  }
   try {
     const { error } = await sb
       .from('user_data')

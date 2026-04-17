@@ -1510,8 +1510,7 @@
     transition: opacity 0.3s;
   }
   .auth-screen.hidden {
-    opacity: 0;
-    pointer-events: none;
+    display: none;
   }
   .auth-card {
     background: #ffffff;
@@ -2102,6 +2101,17 @@ function signOut() {
 async function initApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.querySelector('.app').style.display = 'flex';
+
+  // Refresh auth session before loading data (prevents stale token issues)
+  try {
+    const { data: refreshData } = await sb.auth.refreshSession();
+    if (refreshData?.session?.user) {
+      currentUser = refreshData.session.user;
+      console.log('initApp: session refreshed for', currentUser.email);
+    }
+  } catch(e) {
+    console.warn('initApp: session refresh failed, using existing token', e);
+  }
 
   // Load data from Supabase
   storeCache = await loadStoreFromCloud();

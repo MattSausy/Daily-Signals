@@ -2109,35 +2109,51 @@ async function initApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.querySelector('.app').style.display = 'flex';
 
-  // Refresh auth session before loading data (prevents stale token issues)
+  // Step 1: Try refreshing the auth token first
   try {
     const { data: refreshData } = await sb.auth.refreshSession();
     if (refreshData?.session?.user) {
       currentUser = refreshData.session.user;
-      console.log('initApp: session refreshed for', currentUser.email);
     }
+  } catch(e) {}
+
+  // Step 2: Try loading from Supabase
+  let cloudStore = null;
+  try {
+    cloudStore = await loadStoreFromCloud();
   } catch(e) {
-    console.warn('initApp: session refresh failed, using existing token', e);
+    console.error('initApp: cloud load threw', e);
   }
 
-  // Load data from Supabase
-  storeCache = await loadStoreFromCloud();
+  // Step 3: Check localStorage backup
+  let localStore = null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) localStore = JSON.parse(raw);
+  } catch(e) {}
 
-  if (!storeCache || (!storeCache.tasks || storeCache.tasks.length === 0)) {
-    if (!storeCache) storeCache = emptyStore();
-    console.warn('No data loaded from cloud or localStorage.');
-    // Show visible warning banner
-    const banner = document.createElement('div');
-    banner.id = 'data-warning-banner';
-    banner.style.cssText = 'background:#fff3cd;color:#856404;padding:12px 20px;font-size:13px;border-bottom:1px solid #ffc107;display:flex;align-items:center;justify-content:space-between;';
-    banner.innerHTML = '<span>⚠️ No tasks loaded. Your data may not have synced. Try signing out and back in, or check your connection.</span><button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#856404;">✕</button>';
-    const main = document.querySelector('.main');
-    if (main) main.prepend(banner);
-  } else {
+  const cloudTasks = cloudStore?.tasks?.length || 0;
+  const localTasks = localStore?.tasks?.length || 0;
+
+  console.log('initApp: cloud has', cloudTasks, 'tasks, localStorage has', localTasks, 'tasks');
+
+  // Step 4: Pick the best source (whichever has more tasks)
+  if (cloudTasks >= localTasks && cloudTasks > 0) {
+    storeCache = cloudStore;
     cloudDataLoaded = true;
-    // Immediately backup to localStorage so refresh always has data
+    console.log('initApp: using cloud data');
+  } else if (localTasks > 0) {
+    storeCache = localStore;
+    cloudDataLoaded = true;
+    console.log('initApp: using localStorage backup (cloud had fewer/no tasks)');
+  } else {
+    storeCache = emptyStore();
+    console.warn('initApp: no data found anywhere');
+  }
+
+  // Step 5: Always backup to localStorage
+  if (storeCache.tasks?.length > 0) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeCache)); } catch(e) {}
-    console.log('initApp: data loaded, tasks:', storeCache.tasks?.length, '— backed up to localStorage');
   }
 
   const emailDisplay = document.getElementById('user-email-display');

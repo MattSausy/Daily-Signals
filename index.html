@@ -2152,10 +2152,16 @@ async function signOut() {
   currentUser = null;
   storeCache = null;
   cloudDataLoaded = false;
-  localStorage.removeItem(STORAGE_KEY);
-  document.getElementById('auth-screen').classList.remove('hidden');
-  document.querySelector('.app').style.display = 'none';
-  // Force reload to clear any stale session tokens
+  // Clear Supabase auth tokens from localStorage (prevents stale session on reload)
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key === STORAGE_KEY)) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+  // Force reload — will land on login screen with clean state
   window.location.reload();
 }
 

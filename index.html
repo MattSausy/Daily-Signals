@@ -2176,7 +2176,15 @@ function finishInit() {
 
   initTheme();
   updateSidebarAreas();
-  renderToday();
+
+  // Restore last page or default to today
+  const savedPage = localStorage.getItem('ds-current-page');
+  if (savedPage && document.getElementById('page-' + savedPage)) {
+    navigate(savedPage);
+  } else {
+    renderToday();
+  }
+
   checkBackupReminder();
 }
 
@@ -2504,6 +2512,7 @@ let previousPage = 'today';
 function navigate(page) {
   if (currentPage !== page) previousPage = currentPage;
   currentPage = page;
+  try { localStorage.setItem('ds-current-page', page); } catch(e) {}
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));

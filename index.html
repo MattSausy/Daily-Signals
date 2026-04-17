@@ -2142,27 +2142,16 @@ async function authAction() {
   }
 }
 
-async function signOut() {
-  try {
-    await sb.auth.signOut();
-  } catch(e) {
-    console.error('Sign out error:', e);
-  }
-  // Force clear all local state regardless of whether signOut succeeded
+function signOut() {
+  // Don't await Supabase signOut — it can hang. Just nuke local state and reload.
+  sb.auth.signOut().catch(() => {});
   currentUser = null;
   storeCache = null;
   cloudDataLoaded = false;
-  // Clear Supabase auth tokens from localStorage (prevents stale session on reload)
-  const keysToRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && (key.startsWith('sb-') || key === STORAGE_KEY)) {
-      keysToRemove.push(key);
-    }
-  }
-  keysToRemove.forEach(k => localStorage.removeItem(k));
-  // Force reload — will land on login screen with clean state
-  window.location.reload();
+  // Clear ALL localStorage (Supabase auth tokens + app data)
+  try { localStorage.clear(); } catch(e) {}
+  // Force reload — will land on login screen
+  window.location.href = window.location.origin + window.location.pathname;
 }
 
 async function initApp() {
@@ -2172,9 +2161,16 @@ async function initApp() {
   // Load data from Supabase
   storeCache = await loadStoreFromCloud();
 
-  if (!storeCache) {
-    storeCache = emptyStore();
-    console.warn('No data loaded from cloud or localStorage — starting with empty store. Cloud saves are BLOCKED until real data is loaded.');
+  if (!storeCache || (!storeCache.tasks || storeCache.tasks.length === 0)) {
+    if (!storeCache) storeCache = emptyStore();
+    console.warn('No data loaded from cloud or localStorage.');
+    // Show visible warning banner
+    const banner = document.createElement('div');
+    banner.id = 'data-warning-banner';
+    banner.style.cssText = 'background:#fff3cd;color:#856404;padding:12px 20px;font-size:13px;border-bottom:1px solid #ffc107;display:flex;align-items:center;justify-content:space-between;';
+    banner.innerHTML = '<span>⚠️ No tasks loaded. Your data may not have synced. Try signing out and back in, or check your connection.</span><button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:16px;cursor:pointer;color:#856404;">✕</button>';
+    const main = document.querySelector('.main');
+    if (main) main.prepend(banner);
   } else {
     cloudDataLoaded = true;
   }
@@ -2255,7 +2251,8 @@ function setStore(store) {
 }
 
 async function loadStoreFromCloud() {
-  if (!currentUser) return null;
+  if (!currentUser) { console.warn('loadStore: no currentUser'); return null; }
+  console.log('loadStore: loading for user', currentUser.id, currentUser.email);
   try {
     const { data, error } = await sb
       .from('user_data')
@@ -2264,28 +2261,32 @@ async function loadStoreFromCloud() {
       .single();
 
     if (error && error.code === 'PGRST116') {
-      // No row yet — new user
+      console.warn('loadStore: no row yet (new user)');
       return null;
     }
     if (error) {
-      console.error('Load error:', error);
+      console.error('loadStore error:', error.code, error.message, error);
       // If auth-related error, try refreshing the session
       if (error.code === 'PGRST301' || error.message?.includes('JWT') || error.code === '401') {
         console.warn('Auth token may be expired, attempting refresh...');
         const { data: refreshData } = await sb.auth.refreshSession();
         if (refreshData?.session) {
-          // Retry the load with refreshed session
           const retry = await sb.from('user_data').select('store_json').eq('user_id', currentUser.id).single();
-          if (!retry.error && retry.data) return retry.data.store_json;
+          if (!retry.error && retry.data) {
+            console.log('loadStore: retry succeeded after token refresh');
+            return retry.data.store_json;
+          }
         }
       }
       // Fall back to localStorage
       const raw = localStorage.getItem(STORAGE_KEY);
+      console.log('loadStore: falling back to localStorage, has data:', !!raw);
       return raw ? JSON.parse(raw) : null;
     }
+    console.log('loadStore: success, tasks:', data.store_json?.tasks?.length || 0);
     return data.store_json;
   } catch(e) {
-    console.error('Cloud load failed:', e);
+    console.error('loadStore: exception:', e);
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Signals v8</title>
+<title>Daily Signals</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -2109,12 +2109,7 @@ async function initApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.querySelector('.app').style.display = 'flex';
 
-  // Debug banner — show immediately so we can track what's happening
-  const dbg = document.createElement('div');
-  dbg.id = 'debug-banner';
-  dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#333;color:#0f0;font-family:monospace;font-size:12px;padding:8px 16px;z-index:9999;';
-  dbg.textContent = 'v8 | loading...';
-  document.body.appendChild(dbg);
+
 
   // Step 1: Check localStorage FIRST (instant, always available)
   let localStore = null;
@@ -2123,13 +2118,11 @@ async function initApp() {
     if (raw) localStore = JSON.parse(raw);
   } catch(e) {}
   const localTasks = localStore?.tasks?.length || 0;
-  dbg.textContent = `v8 | localStorage: ${localTasks} tasks | cloud: loading...`;
 
   // Step 2: If we have localStorage data, use it IMMEDIATELY (don't wait for cloud)
   if (localTasks > 0) {
     storeCache = localStore;
     cloudDataLoaded = true;
-    dbg.textContent = `v8 | localStorage: ${localTasks} tasks | USING localStorage (fast) | cloud: loading...`;
     // Render immediately with local data while cloud loads in background
     finishInit();
   }
@@ -2142,7 +2135,6 @@ async function initApp() {
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
     ]);
   } catch(e) {
-    dbg.textContent = dbg.textContent.replace('cloud: loading...', `cloud: FAILED (${e.message})`);
   }
 
   const cloudTasks = cloudStore?.tasks?.length || 0;
@@ -2151,13 +2143,11 @@ async function initApp() {
   if (cloudTasks > 0 && cloudTasks >= localTasks) {
     storeCache = cloudStore;
     cloudDataLoaded = true;
-    dbg.textContent = `v8 | localStorage: ${localTasks} | cloud: ${cloudTasks} | USING: cloud`;
     // Backup cloud data to localStorage
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeCache)); } catch(e) {}
     finishInit(); // Re-render with cloud data
   } else if (cloudTasks > 0) {
     // Cloud loaded but local had more — just backup
-    dbg.textContent = `v8 | localStorage: ${localTasks} | cloud: ${cloudTasks} | USING: localStorage (had more)`;
   } else if (localTasks === 0) {
     // Nothing anywhere
     storeCache = emptyStore();

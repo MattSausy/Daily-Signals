@@ -543,50 +543,41 @@
 
   /* ═══ ADD TASK BUTTON (Asana-style) ═══ */
   .add-task-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-bottom: 20px;
-    margin: -12px 0 0 0;
-    position: sticky;
-    top: 0;
-    background: var(--bg);
-    z-index: 50;
-    padding-top: 12px;
+    position: fixed;
+    top: 24px;
+    right: 36px;
+    z-index: 100;
   }
   .add-task-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--card-bg);
-    color: var(--text);
-    font-size: 13px;
-    font-weight: 500;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(200,150,90,0.3);
   }
   .add-task-btn:hover {
-    background: var(--hover-bg);
-    border-color: var(--accent);
-    box-shadow: var(--shadow-sm);
+    background: var(--accent-hover);
+    box-shadow: 0 4px 14px rgba(200,150,90,0.4);
+    transform: translateY(-1px);
   }
   .add-task-btn .add-icon {
-    font-size: 16px;
-    font-weight: 400;
-    color: var(--accent);
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
     line-height: 1;
   }
   .add-task-btn .chevron {
-    font-size: 9px;
-    color: var(--text-secondary);
-    margin-left: 2px;
-    border-left: 1px solid var(--border);
-    padding-left: 8px;
+    display: none;
   }
 
   /* ═══ DAILY SCHEDULE ═══ */
@@ -1840,7 +1831,7 @@
     <!-- PAGE: TASK DETAIL (drill-in view) -->
     <!-- ════════════════════════════════════ -->
     <div class="page" id="page-task-detail">
-      <div style="max-width:700px; padding-top:48px;">
+      <div style="max-width:700px;">
         <div style="margin-bottom:16px;">
           <button class="btn btn-sm" onclick="navigateBack()" style="font-size:12px;">← Back</button>
         </div>

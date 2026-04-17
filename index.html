@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Signals v7</title>
+<title>Daily Signals v8</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -2109,47 +2109,69 @@ async function initApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.querySelector('.app').style.display = 'flex';
 
-  // Step 1: Try loading from Supabase
-  let cloudStore = null;
-  try {
-    cloudStore = await loadStoreFromCloud();
-  } catch(e) {
-    console.error('initApp: cloud load threw', e);
-  }
+  // Debug banner — show immediately so we can track what's happening
+  const dbg = document.createElement('div');
+  dbg.id = 'debug-banner';
+  dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#333;color:#0f0;font-family:monospace;font-size:12px;padding:8px 16px;z-index:9999;';
+  dbg.textContent = 'v8 | loading...';
+  document.body.appendChild(dbg);
 
-  // Step 3: Check localStorage backup
+  // Step 1: Check localStorage FIRST (instant, always available)
   let localStore = null;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) localStore = JSON.parse(raw);
   } catch(e) {}
-
-  const cloudTasks = cloudStore?.tasks?.length || 0;
   const localTasks = localStore?.tasks?.length || 0;
+  dbg.textContent = `v8 | localStorage: ${localTasks} tasks | cloud: loading...`;
 
-  // TEMP DEBUG: show visible status so we can see what's happening
-  const dbg = document.createElement('div');
-  dbg.id = 'debug-banner';
-  dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#333;color:#0f0;font-family:monospace;font-size:12px;padding:8px 16px;z-index:9999;';
-  dbg.textContent = `v7 | cloud: ${cloudTasks} tasks | localStorage: ${localTasks} tasks | user: ${currentUser?.email || 'none'}`;
-  document.body.appendChild(dbg);
-
-  // Step 4: Pick the best source (whichever has more tasks)
-  if (cloudTasks >= localTasks && cloudTasks > 0) {
-    storeCache = cloudStore;
-    cloudDataLoaded = true;
-    dbg.textContent += ' | USING: cloud';
-  } else if (localTasks > 0) {
+  // Step 2: If we have localStorage data, use it IMMEDIATELY (don't wait for cloud)
+  if (localTasks > 0) {
     storeCache = localStore;
     cloudDataLoaded = true;
-    dbg.textContent += ' | USING: localStorage';
-  } else {
+    dbg.textContent = `v8 | localStorage: ${localTasks} tasks | USING localStorage (fast) | cloud: loading...`;
+    // Render immediately with local data while cloud loads in background
+    finishInit();
+  }
+
+  // Step 3: Try loading from Supabase with a 5-second timeout
+  let cloudStore = null;
+  try {
+    cloudStore = await Promise.race([
+      loadStoreFromCloud(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+    ]);
+  } catch(e) {
+    dbg.textContent = dbg.textContent.replace('cloud: loading...', `cloud: FAILED (${e.message})`);
+  }
+
+  const cloudTasks = cloudStore?.tasks?.length || 0;
+
+  // Step 4: If cloud has more data than what we're showing, switch to it
+  if (cloudTasks > 0 && cloudTasks >= localTasks) {
+    storeCache = cloudStore;
+    cloudDataLoaded = true;
+    dbg.textContent = `v8 | localStorage: ${localTasks} | cloud: ${cloudTasks} | USING: cloud`;
+    // Backup cloud data to localStorage
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeCache)); } catch(e) {}
+    finishInit(); // Re-render with cloud data
+  } else if (cloudTasks > 0) {
+    // Cloud loaded but local had more — just backup
+    dbg.textContent = `v8 | localStorage: ${localTasks} | cloud: ${cloudTasks} | USING: localStorage (had more)`;
+  } else if (localTasks === 0) {
+    // Nothing anywhere
     storeCache = emptyStore();
     console.warn('initApp: no data found anywhere');
   }
 
-  // Step 5: Always backup to localStorage
-  if (storeCache.tasks?.length > 0) {
+  // If nothing was loaded yet (no localStorage, cloud failed), still init
+  if (!storeCache) storeCache = emptyStore();
+  if (localTasks === 0 && cloudTasks === 0) finishInit();
+}
+
+function finishInit() {
+  // Always backup to localStorage
+  if (storeCache && storeCache.tasks?.length > 0) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeCache)); } catch(e) {}
   }
 

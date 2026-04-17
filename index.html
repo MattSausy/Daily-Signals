@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Signals</title>
+<title>Daily Signals v7</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
@@ -2127,17 +2127,22 @@ async function initApp() {
   const cloudTasks = cloudStore?.tasks?.length || 0;
   const localTasks = localStore?.tasks?.length || 0;
 
-  console.log('initApp: cloud has', cloudTasks, 'tasks, localStorage has', localTasks, 'tasks');
+  // TEMP DEBUG: show visible status so we can see what's happening
+  const dbg = document.createElement('div');
+  dbg.id = 'debug-banner';
+  dbg.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#333;color:#0f0;font-family:monospace;font-size:12px;padding:8px 16px;z-index:9999;';
+  dbg.textContent = `v7 | cloud: ${cloudTasks} tasks | localStorage: ${localTasks} tasks | user: ${currentUser?.email || 'none'}`;
+  document.body.appendChild(dbg);
 
   // Step 4: Pick the best source (whichever has more tasks)
   if (cloudTasks >= localTasks && cloudTasks > 0) {
     storeCache = cloudStore;
     cloudDataLoaded = true;
-    console.log('initApp: using cloud data');
+    dbg.textContent += ' | USING: cloud';
   } else if (localTasks > 0) {
     storeCache = localStore;
     cloudDataLoaded = true;
-    console.log('initApp: using localStorage backup (cloud had fewer/no tasks)');
+    dbg.textContent += ' | USING: localStorage';
   } else {
     storeCache = emptyStore();
     console.warn('initApp: no data found anywhere');

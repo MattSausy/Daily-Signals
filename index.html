@@ -543,10 +543,10 @@
 
   /* ═══ ADD TASK BUTTON (Asana-style) ═══ */
   .add-task-bar {
-    position: fixed;
-    top: 24px;
-    right: 36px;
-    z-index: 100;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+    max-width: 820px;
   }
   .add-task-btn {
     display: inline-flex;
@@ -2092,8 +2092,15 @@ function signOut() {
   currentUser = null;
   storeCache = null;
   cloudDataLoaded = false;
-  // Clear ALL localStorage (Supabase auth tokens + app data)
-  try { localStorage.clear(); } catch(e) {}
+  // Clear only Supabase auth tokens — KEEP app data as backup
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('sb-')) keysToRemove.push(key);
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
   // Force reload — will land on login screen
   window.location.href = window.location.origin + window.location.pathname;
 }
@@ -2128,6 +2135,9 @@ async function initApp() {
     if (main) main.prepend(banner);
   } else {
     cloudDataLoaded = true;
+    // Immediately backup to localStorage so refresh always has data
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(storeCache)); } catch(e) {}
+    console.log('initApp: data loaded, tasks:', storeCache.tasks?.length, '— backed up to localStorage');
   }
 
   const emailDisplay = document.getElementById('user-email-display');

@@ -2087,7 +2087,7 @@ async function authAction() {
 }
 
 function signOut() {
-  // Don't await Supabase signOut — it can hang. Just nuke local state and reload.
+  userSignedOut = true;
   sb.auth.signOut().catch(() => {});
   currentUser = null;
   storeCache = null;
@@ -2109,15 +2109,7 @@ async function initApp() {
   document.getElementById('auth-screen').classList.add('hidden');
   document.querySelector('.app').style.display = 'flex';
 
-  // Step 1: Try refreshing the auth token first
-  try {
-    const { data: refreshData } = await sb.auth.refreshSession();
-    if (refreshData?.session?.user) {
-      currentUser = refreshData.session.user;
-    }
-  } catch(e) {}
-
-  // Step 2: Try loading from Supabase
+  // Step 1: Try loading from Supabase
   let cloudStore = null;
   try {
     cloudStore = await loadStoreFromCloud();
@@ -4492,13 +4484,19 @@ document.addEventListener('keydown', (e) => {
 // INIT
 // ═══════════════════════════════════════════════════════════
 
-// Listen for auth state changes (handles token in URL hash, session refresh, etc.)
+// Flag to prevent onAuthStateChange from interfering during init
+let appInitialized = false;
+let userSignedOut = false;
+
 sb.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+  console.log('authStateChange:', event);
+  if (event === 'SIGNED_IN' && session?.user && !appInitialized) {
     currentUser = session.user;
+    appInitialized = true;
     await initApp();
   }
-  if (event === 'SIGNED_OUT') {
+  // Only respond to SIGNED_OUT if the user explicitly clicked sign out
+  if (event === 'SIGNED_OUT' && userSignedOut) {
     currentUser = null;
     storeCache = null;
     document.querySelector('.app').style.display = 'none';
@@ -4511,9 +4509,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     currentUser = session.user;
+    appInitialized = true;
     await initApp();
   } else {
-    // Show auth screen, hide app
     document.querySelector('.app').style.display = 'none';
     document.getElementById('auth-screen').classList.remove('hidden');
   }

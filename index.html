@@ -36,34 +36,6 @@
     --shadow-lg: 0 4px 16px rgba(44,40,37,0.08);
   }
 
-  [data-theme="dark"] {
-    --bg: #1a1816;
-    --sidebar-bg: #12100e;
-    --sidebar-text: #d8d2c8;
-    --sidebar-hover: rgba(255,255,255,0.06);
-    --sidebar-active: rgba(255,255,255,0.12);
-    --card-bg: #242220;
-    --text: #e8e2d8;
-    --text-secondary: #908880;
-    --border: #3a3632;
-    --accent: #d4a060;
-    --accent-hover: #e0b070;
-    --accent-light: rgba(212,160,96,0.1);
-    --red: #e07060;
-    --blue: #60a0d4;
-    --green: #6aae6e;
-    --purple: #a080c0;
-    --orange: #e09850;
-    --hover-bg: #2e2a28;
-    --expand-bg: #282624;
-    --must-do-bg: linear-gradient(135deg, #2e2618 0%, #302816 100%);
-    --must-do-border: #5a4a28;
-    --must-do-text: #e0b840;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.15);
-    --shadow-md: 0 2px 8px rgba(0,0,0,0.2);
-    --shadow-lg: 0 4px 16px rgba(0,0,0,0.25);
-  }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
@@ -1539,7 +1511,7 @@
   .auth-screen {
     position: fixed;
     inset: 0;
-    background: var(--bg);
+    background: #f7f6f3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1551,38 +1523,39 @@
     pointer-events: none;
   }
   .auth-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    border: 1px solid #e0dcd6;
     border-radius: var(--radius);
     padding: 40px 36px;
     width: 100%;
     max-width: 380px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   }
   .auth-input {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid var(--border);
+    border: 2px solid #d0ccc6;
     border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--text);
+    background: #ffffff;
+    color: #2c2825;
     font-size: 14px;
     font-family: inherit;
     margin-bottom: 10px;
     box-sizing: border-box;
     transition: border-color 0.15s;
   }
+  .auth-input::placeholder { color: #999; }
   .auth-input:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(200,150,90,0.1);
+    box-shadow: 0 0 0 3px rgba(200,150,90,0.15);
   }
   .auth-btn {
     width: 100%;
     padding: 12px;
     border: none;
     border-radius: var(--radius-sm);
-    background: var(--accent);
+    background: #c8965a;
     color: white;
     font-size: 14px;
     font-weight: 600;
@@ -1591,7 +1564,7 @@
     transition: background 0.15s;
     margin-top: 4px;
   }
-  .auth-btn:hover { background: var(--accent-hover); }
+  .auth-btn:hover { background: #b8863f; }
   .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>
 </head>
@@ -1603,7 +1576,7 @@
     <div class="sidebar-logo">Daily Signals</div>
     <div id="user-info" style="padding:0 10px 16px; font-size:11px; color:var(--text-secondary);">
       <span id="user-email-display"></span>
-      <a href="#" onclick="signOut();return false;" style="color:var(--accent); margin-left:4px; font-size:10px;">Sign out</a>
+      <a href="#" onclick="event.preventDefault();try{signOut();}catch(e){localStorage.clear();window.location.reload();}" style="color:var(--accent); margin-left:4px; font-size:10px; cursor:pointer;">Sign out</a>
     </div>
 
     <div class="nav-item active" data-page="today" onclick="navigate('today')">
@@ -1801,25 +1774,6 @@
       <div style="max-width:600px;">
         <div class="page-title">Settings</div>
         <div class="page-subtitle">Appearance and workspace configuration</div>
-
-        <!-- Theme Toggle -->
-        <div class="settings-card">
-          <div class="settings-card-title">Appearance</div>
-          <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div>
-              <div style="font-weight:600; font-size:14px;">Theme</div>
-              <div style="font-size:12px; color:var(--text-secondary);">Switch between light and dark mode</div>
-            </div>
-            <div id="theme-toggle" style="display:flex; gap:4px; background:var(--hover-bg); border-radius:20px; padding:3px;">
-              <button class="theme-btn" data-theme="light" onclick="setTheme('light')" style="padding:6px 16px; border:none; border-radius:17px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s;">
-                ☀ Light
-              </button>
-              <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')" style="padding:6px 16px; border:none; border-radius:17px; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s;">
-                🌙 Dark
-              </button>
-            </div>
-          </div>
-        </div>
 
         <div style="margin:24px 0 8px;"><div class="section-label">Areas & Categories</div></div>
 
@@ -4088,12 +4042,9 @@ function updateThemeToggle(theme) {
 }
 
 function initTheme() {
-  const saved = localStorage.getItem('cc-theme');
-  if (saved) {
-    document.documentElement.setAttribute('data-theme', saved);
-  }
-  // Update toggle buttons on next tick (after DOM is ready)
-  setTimeout(() => updateThemeToggle(saved || 'light'), 0);
+  // Dark mode removed for v1 — always light
+  document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('cc-theme', 'light');
 }
 
 // ═══════════════════════════════════════════════════════════

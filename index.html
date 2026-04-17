@@ -1663,10 +1663,7 @@
 
       <div id="streak-banner"></div>
 
-      <div class="quick-capture">
-        <input type="text" id="quick-capture-input" class="quick-capture-input" placeholder="Add a task..." onkeydown="if(event.key==='Enter')quickCapture()">
-        <button class="quick-capture-btn" onclick="quickCapture()" title="Add task">+</button>
-      </div>
+
 
       <div id="today-progress" style="margin-bottom:16px;"></div>
 
@@ -1889,7 +1886,7 @@
     <!-- PAGE: TASK DETAIL (drill-in view) -->
     <!-- ════════════════════════════════════ -->
     <div class="page" id="page-task-detail">
-      <div style="max-width:700px;">
+      <div style="max-width:700px; padding-top:48px;">
         <div style="margin-bottom:16px;">
           <button class="btn btn-sm" onclick="navigateBack()" style="font-size:12px;">← Back</button>
         </div>
@@ -2217,6 +2214,7 @@ function getStore() {
     if (t.pinned === undefined) t.pinned = false;
     if (t.description === undefined) t.description = '';
     if (t.research === undefined) t.research = '';
+      if (t.links === undefined) t.links = [];
     // Migrate: merge old notes into description if notes exists
     if (t.notes && t.notes.trim()) {
       if (t.description) t.description += '\n\n' + t.notes;
@@ -2603,6 +2601,13 @@ function renderTaskDetail() {
     <textarea class="task-detail-textarea" placeholder="Paste findings from Claude chats, links, data, meeting notes..."
       onchange="detailUpdateField('${task.id}','research',this.value)">${escHtml(task.research || '')}</textarea>
 
+    <div class="task-detail-section-label">Links</div>
+    <div id="links-detail-${task.id}">${renderLinksDetail(task)}</div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <input type="text" class="form-input" id="new-link-detail-${task.id}" placeholder="Paste URL (Google Drive, Dropbox, etc.)..." style="flex:1;" onkeydown="if(event.key==='Enter'){addLinkToTask('${task.id}',this.value,true);this.value='';}">
+      <button class="btn btn-sm" onclick="addLinkToTask('${task.id}',document.getElementById('new-link-detail-${task.id}').value,true);document.getElementById('new-link-detail-${task.id}').value='';">+ Add Link</button>
+    </div>
+
     <div class="task-detail-actions">
       <button class="btn btn-sm" onclick="detailComplete('${task.id}')" style="color:var(--green);border-color:var(--green);">✓ Complete</button>
       <button class="btn btn-sm" onclick="togglePin('${task.id}');renderTaskDetail();">${pinLabel}</button>
@@ -2745,29 +2750,10 @@ function renderToday() {
     <div class="progress-label"><span>${completedToday2.length} of ${totalGoal} done</span><span>${pct}%</span></div>
   `;
 
-  // Weekly score
-  const stats = getWeeklyStats(store);
-  const scoreTrend = stats.thisWeekPts > stats.lastWeekPts ? '↑' : stats.thisWeekPts < stats.lastWeekPts ? '↓' : '→';
-  const trendColor = stats.thisWeekPts >= stats.lastWeekPts ? 'var(--green)' : 'var(--red)';
-  const trendClass = stats.thisWeekPts > stats.lastWeekPts ? 'trend-up' : stats.thisWeekPts < stats.lastWeekPts ? 'trend-down' : '';
-  document.getElementById('weekly-score').innerHTML = `
-    <div class="weekly-score-bar">
-      <div class="score-stat">
-        <div class="score-number">${stats.thisWeekPts}</div>
-        <div class="score-label">points this week</div>
-      </div>
-      <div class="score-stat">
-        <div class="score-number">${stats.thisWeekCount}</div>
-        <div class="score-label">tasks done</div>
-      </div>
-      <div class="score-stat">
-        <div class="score-number" style="color:${trendColor}">${scoreTrend} ${stats.lastWeekPts > 0 ? Math.round((stats.thisWeekPts / stats.lastWeekPts) * 100) + '%' : '—'}</div>
-        <div class="score-label">vs last week</div>
-      </div>
-    </div>
-  `;
+  // Weekly score removed for v1
+  document.getElementById('weekly-score').innerHTML = '';
 
-  // Streak banner - real day streaks
+    // Streak banner - real day streaks
   const streakEl = document.getElementById('streak-banner');
   const streak = store.streakData || { current: 0, best: 0 };
   if (streak.current > 0) {
@@ -2946,6 +2932,14 @@ function renderCleanTaskRow(task) {
             <textarea class="inline-edit-textarea" rows="3" placeholder="Paste findings from Claude, links, data..." onchange="inlineUpdateField('${task.id}','research',this.value)" onclick="event.stopPropagation()">${escHtml(research)}</textarea>
           </div>
         </div>
+        <div style="margin-top:8px;" onclick="event.stopPropagation()">
+          <div class="expand-detail-label">Links</div>
+          <div id="links-inline-${task.id}">${renderLinksInline(task)}</div>
+          <div style="display:flex;gap:6px;margin-top:4px;">
+            <input type="text" class="form-input" id="new-link-inline-${task.id}" placeholder="Paste URL..." style="font-size:12px;flex:1;" onkeydown="if(event.key==='Enter'){addLinkToTask('${task.id}',this.value);this.value='';}">
+            <button class="btn btn-sm" onclick="addLinkToTask('${task.id}',document.getElementById('new-link-inline-${task.id}').value);document.getElementById('new-link-inline-${task.id}').value='';" style="font-size:11px;">+ Add</button>
+          </div>
+        </div>
         <div class="expand-actions">
           <button class="btn btn-sm" onclick="event.stopPropagation();completeWithConfetti(event,'${task.id}')" style="color:var(--green);border-color:var(--green);">✓ Complete</button>
           <button class="btn btn-sm" onclick="event.stopPropagation();togglePin('${task.id}')">${pinIcon} ${pinLabel}</button>
@@ -2960,7 +2954,7 @@ function renderCleanTaskRow(task) {
   return `
     <div class="task-row${isExpanded ? ' expanded' : ''}">
       <div class="${checkClass}" onclick="completeWithConfetti(event, '${task.id}')"></div>
-      <div class="task-row-content" onclick="toggleTaskExpand('${task.id}')" style="cursor:pointer;">
+      <div class="task-row-content" onclick="toggleTaskExpand('${task.id}')" ondblclick="if(expandedTaskId==='${task.id}'){toggleTaskExpand('${task.id}');}" style="cursor:pointer;">
         <div class="${nameClass}">
           ${escHtml(task.name)}
           <span class="task-detail-name-link" onclick="event.stopPropagation();openTaskDetail('${task.id}')" title="Open full view" style="font-size:11px;color:var(--text-secondary);margin-left:6px;">↗</span>
@@ -2971,6 +2965,71 @@ function renderCleanTaskRow(task) {
     </div>
     ${expandPanel}
   `;
+}
+
+
+// ═══ LINKS MANAGEMENT ═══
+function renderLinksInline(task) {
+  const links = task.links || [];
+  if (links.length === 0) return '<div style="font-size:11px;color:var(--text-secondary);">No links yet</div>';
+  return links.map((url, i) => {
+    const display = url.length > 50 ? url.substring(0, 50) + '...' : url;
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+      <a href="${escAttr(url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--blue);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escAttr(url)}">🔗 ${escHtml(display)}</a>
+      <button onclick="removeLinkFromTask('${task.id}',${i})" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:12px;padding:0 2px;" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderLinksDetail(task) {
+  const links = task.links || [];
+  if (links.length === 0) return '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">No links yet</div>';
+  return links.map((url, i) => {
+    const display = url.length > 60 ? url.substring(0, 60) + '...' : url;
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:6px 10px;background:var(--hover-bg);border-radius:6px;">
+      <a href="${escAttr(url)}" target="_blank" rel="noopener" style="font-size:13px;color:var(--blue);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escAttr(url)}">🔗 ${escHtml(display)}</a>
+      <button onclick="removeLinkFromTask('${task.id}',${i},true)" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-size:14px;padding:0 4px;" title="Remove link">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function addLinkToTask(taskId, url, isDetail) {
+  url = (url || '').trim();
+  if (!url) return;
+  // Auto-add https if missing
+  if (!/^https?:\/\//i.test(url) && url.includes('.')) url = 'https://' + url;
+  const store = getStore();
+  const task = store.tasks.find(t => t.id === taskId);
+  if (!task) return;
+  if (!task.links) task.links = [];
+  if (task.links.includes(url)) { toast('Link already added'); return; }
+  task.links.push(url);
+  setStore(store);
+  toast('Link added');
+  // Re-render the links list
+  if (isDetail) {
+    const el = document.getElementById('links-detail-' + taskId);
+    if (el) el.innerHTML = renderLinksDetail(task);
+  } else {
+    const el = document.getElementById('links-inline-' + taskId);
+    if (el) el.innerHTML = renderLinksInline(task);
+  }
+}
+
+function removeLinkFromTask(taskId, index, isDetail) {
+  const store = getStore();
+  const task = store.tasks.find(t => t.id === taskId);
+  if (!task || !task.links) return;
+  task.links.splice(index, 1);
+  setStore(store);
+  toast('Link removed');
+  if (isDetail) {
+    const el = document.getElementById('links-detail-' + taskId);
+    if (el) el.innerHTML = renderLinksDetail(task);
+  } else {
+    const el = document.getElementById('links-inline-' + taskId);
+    if (el) el.innerHTML = renderLinksInline(task);
+  }
 }
 
 function toggleTaskExpand(id) {
@@ -3436,6 +3495,7 @@ function saveTask() {
     due: document.getElementById('task-due').value,
     description: document.getElementById('task-description').value.trim(),
     research: document.getElementById('task-research').value.trim(),
+    links: [],
   };
 
   if (editId) {

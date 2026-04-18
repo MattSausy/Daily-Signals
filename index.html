@@ -1639,6 +1639,11 @@
       <span class="nav-icon">✎</span>
       <span>Context Feed</span>
     </div>
+    <div class="nav-item" data-page="archived" onclick="navigate('archived')">
+      <span class="nav-icon">📦</span>
+      <span>Archived</span>
+      <span class="nav-count" id="archived-count">0</span>
+    </div>
 
     <div id="sidebar-areas-container"></div>
 
@@ -1898,6 +1903,20 @@
       <div class="page-title">Search Results</div>
       <div class="page-subtitle" id="search-subtitle"></div>
       <div id="search-results" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- PAGE: ARCHIVED -->
+    <!-- ════════════════════════════════════ -->
+    <div class="page" id="page-archived">
+      <div class="focus-header">
+        <div>
+          <div class="page-title">Archived Tasks</div>
+          <div class="page-subtitle" id="archived-subtitle"></div>
+        </div>
+      </div>
+      <div id="archived-filters" style="margin-bottom:16px;"></div>
+      <div id="archived-list"></div>
     </div>
 
   </div><!-- /main -->
@@ -2590,6 +2609,13 @@ function navigate(page) {
   if (page === 'settings') renderSettings();
   if (page === 'add') { openTaskModal(); return; } // redirect to modal
   if (page === 'task-detail') renderTaskDetail();
+  if (page === 'archived') renderArchived();
+  // Update archived count
+  try {
+    const store = getStore();
+    const el = document.getElementById('archived-count');
+    if (el) el.textContent = (store.archived || []).length;
+  } catch(e) {}
 }
 
 function navigateBack() {
@@ -4155,10 +4181,102 @@ function renderCurrentPage() {
   else if (currentPage === 'ideas') renderIdeas();
   else if (currentPage === 'claude') renderClaudeExport();
   else if (currentPage === 'settings') renderSettings();
+  else if (currentPage === 'archived') renderArchived();
   else if (currentPage === 'search') {
     const q = document.getElementById('global-search')?.value?.trim();
     if (q) renderSearch(q);
   }
+  // Update archived count in sidebar
+  try {
+    const store = getStore();
+    const el = document.getElementById('archived-count');
+    if (el) el.textContent = (store.archived || []).length;
+  } catch(e) {}
+}
+
+// ═══ ARCHIVED PAGE ═══
+let archivedSearchFilter = '';
+
+function renderArchived() {
+  const store = getStore();
+  let archived = store.archived || [];
+
+  document.getElementById('archived-subtitle').textContent = `${archived.length} archived task${archived.length !== 1 ? 's' : ''}`;
+
+  // Search filter
+  let filterHtml = '<div style="display:flex;gap:8px;align-items:center;">';
+  filterHtml += '<input type="text" class="form-input" id="archived-search" placeholder="Filter archived tasks..." value="' + escAttr(archivedSearchFilter) + '" oninput="archivedSearchFilter=this.value;renderArchived();" style="flex:1;max-width:300px;font-size:13px;padding:8px 12px;">';
+  if (archivedSearchFilter) {
+    filterHtml += '<button class="btn btn-sm" onclick="archivedSearchFilter=\'\';renderArchived();">Clear</button>';
+  }
+  filterHtml += '</div>';
+  document.getElementById('archived-filters').innerHTML = filterHtml;
+
+  // Apply filter
+  if (archivedSearchFilter) {
+    const q = archivedSearchFilter.toLowerCase();
+    archived = archived.filter(t =>
+      (t.name && t.name.toLowerCase().includes(q)) ||
+      (t.area && t.area.toLowerCase().includes(q)) ||
+      (t.description && t.description.toLowerCase().includes(q))
+    );
+  }
+
+  // Sort by archived date (newest first)
+  archived.sort((a, b) => (b.archivedAt || 0) - (a.archivedAt || 0));
+
+  if (archived.length === 0) {
+    document.getElementById('archived-list').innerHTML = archivedSearchFilter
+      ? '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-text">No archived tasks match your filter</div></div>'
+      : '<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No archived tasks</div></div>';
+    return;
+  }
+
+  let html = '<div class="card" style="padding:4px 20px;">';
+  for (const task of archived) {
+    const areaColor = AREA_COLORS[task.area] || 'gray';
+    const colorMap = { 'blue': 'var(--blue)', 'green': 'var(--green)', 'purple': 'var(--purple)', 'red': 'var(--red)', 'orange': 'var(--orange)', 'coral': 'var(--red)', 'teal': 'var(--blue)' };
+    const dotColor = colorMap[areaColor] || 'var(--text-secondary)';
+    const archivedDate = task.archivedAt ? new Date(task.archivedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+
+    html += `<div class="task-row" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;${task.completed ? 'text-decoration:line-through;color:var(--text-secondary);' : ''}">${escHtml(task.name)}</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
+          <span class="area-dot" style="background:${dotColor};width:6px;height:6px;display:inline-block;border-radius:50;margin-right:4px;"></span>
+          ${escHtml(task.area || '')}${archivedDate ? ' · Archived ' + archivedDate : ''}${task.completed ? ' · Completed' : ''}
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="restoreFromArchive('${task.id}')" style="font-size:11px;white-space:nowrap;">Restore</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteFromArchive('${task.id}')" style="font-size:11px;white-space:nowrap;">Delete</button>
+    </div>`;
+  }
+  html += '</div>';
+  document.getElementById('archived-list').innerHTML = html;
+}
+
+function restoreFromArchive(id) {
+  const store = getStore();
+  const idx = store.archived.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const task = store.archived.splice(idx, 1)[0];
+  delete task.archivedAt;
+  store.tasks.push(task);
+  setStore(store);
+  toast('Task restored: ' + task.name);
+  renderArchived();
+}
+
+function deleteFromArchive(id) {
+  if (!confirm('Permanently delete this archived task?')) return;
+  const store = getStore();
+  const idx = store.archived.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const name = store.archived[idx].name;
+  store.archived.splice(idx, 1);
+  setStore(store);
+  toast('Deleted: ' + name);
+  renderArchived();
 }
 
 function toast(msg) {

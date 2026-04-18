@@ -545,9 +545,57 @@
   .add-task-bar {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 8px;
     max-width: 820px;
   }
+  .search-bar {
+    flex: 1;
+    max-width: 320px;
+    position: relative;
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 9px 14px 9px 34px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+  }
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(200,150,90,0.1);
+  }
+  .search-bar input::placeholder { color: var(--text-secondary); }
+  .search-bar .search-icon {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--text-secondary);
+    pointer-events: none;
+  }
+  .search-bar .search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+    display: none;
+  }
+  .search-bar input:not(:placeholder-shown) + .search-icon + .search-clear { display: block; }
   .add-task-btn {
     display: inline-flex;
     align-items: center;
@@ -1607,6 +1655,11 @@
   <div class="main">
 
     <div class="add-task-bar">
+      <div class="search-bar">
+        <input type="text" id="global-search" placeholder="Search tasks..." oninput="handleSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';handleSearch('');this.blur();}">
+        <span class="search-icon">🔍</span>
+        <button class="search-clear" onclick="document.getElementById('global-search').value='';handleSearch('');">✕</button>
+      </div>
       <button class="add-task-btn" onclick="openTaskModal()" title="Add Task (N)">
         <span class="add-icon">+</span> Add task <span class="chevron">▾</span>
       </button>
@@ -1836,6 +1889,15 @@
         </div>
         <div id="task-detail-content"></div>
       </div>
+    </div>
+
+    <!-- ════════════════════════════════════ -->
+    <!-- PAGE: SEARCH RESULTS -->
+    <!-- ════════════════════════════════════ -->
+    <div class="page" id="page-search">
+      <div class="page-title">Search Results</div>
+      <div class="page-subtitle" id="search-subtitle"></div>
+      <div id="search-results" style="margin-top:16px;"></div>
     </div>
 
   </div><!-- /main -->
@@ -2532,6 +2594,75 @@ function navigate(page) {
 
 function navigateBack() {
   navigate(previousPage || 'today');
+}
+
+// ═══ SEARCH ═══
+let searchTimer = null;
+function handleSearch(query) {
+  query = query.trim();
+  if (!query) {
+    // Clear search — go back to previous page
+    if (currentPage === 'search') navigate(previousPage || 'today');
+    return;
+  }
+  // Debounce: wait 200ms after typing stops
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => renderSearch(query), 200);
+}
+
+function renderSearch(query) {
+  const store = getStore();
+  const q = query.toLowerCase();
+  const matches = store.tasks.filter(t => {
+    return (t.name && t.name.toLowerCase().includes(q)) ||
+           (t.description && t.description.toLowerCase().includes(q)) ||
+           (t.research && t.research.toLowerCase().includes(q)) ||
+           (t.area && t.area.toLowerCase().includes(q)) ||
+           (t.category && t.category.toLowerCase().includes(q)) ||
+           (t.assigneeName && t.assigneeName.toLowerCase().includes(q));
+  });
+
+  // Also search archived
+  const archivedMatches = (store.archived || []).filter(t => {
+    return (t.name && t.name.toLowerCase().includes(q)) ||
+           (t.description && t.description.toLowerCase().includes(q));
+  });
+
+  navigate('search');
+  document.getElementById('search-subtitle').textContent = `${matches.length} active task${matches.length !== 1 ? 's' : ''} found${archivedMatches.length > 0 ? ` · ${archivedMatches.length} archived` : ''}`;
+
+  let html = '';
+  if (matches.length > 0) {
+    html += '<div class="card" style="padding:4px 20px;">';
+    html += matches.map(t => renderCleanTaskRow(t)).join('');
+    html += '</div>';
+  } else {
+    html += '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No active tasks match "<strong>' + escHtml(query) + '</strong>"</div>';
+  }
+
+  if (archivedMatches.length > 0) {
+    html += '<div style="margin-top:20px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:8px;">Archived</div>';
+    html += '<div class="card" style="padding:4px 20px;opacity:0.6;">';
+    archivedMatches.forEach(t => {
+      html += '<div class="task-row" style="cursor:pointer;" onclick="unarchiveAndOpen(\'' + t.id + '\')">';
+      html += '<div style="font-size:13px;font-weight:500;padding:8px 0;">' + escHtml(t.name) + ' <span style="font-size:10px;color:var(--text-secondary);">archived</span></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('search-results').innerHTML = html;
+}
+
+function unarchiveAndOpen(id) {
+  const store = getStore();
+  const idx = store.archived.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const task = store.archived.splice(idx, 1)[0];
+  store.tasks.push(task);
+  setStore(store);
+  toast('Task restored from archive');
+  openTaskDetail(id);
 }
 
 function openTaskDetail(taskId) {
@@ -4024,6 +4155,10 @@ function renderCurrentPage() {
   else if (currentPage === 'ideas') renderIdeas();
   else if (currentPage === 'claude') renderClaudeExport();
   else if (currentPage === 'settings') renderSettings();
+  else if (currentPage === 'search') {
+    const q = document.getElementById('global-search')?.value?.trim();
+    if (q) renderSearch(q);
+  }
 }
 
 function toast(msg) {
@@ -4496,9 +4631,16 @@ function clearAllData() {
   renderCurrentPage();
 }
 
-// Keyboard shortcut: N for new task
+// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
+  // Cmd+K or Ctrl+K to focus search from anywhere
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('global-search')?.focus();
+    return;
+  }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if (e.key === '/' ) { e.preventDefault(); document.getElementById('global-search')?.focus(); return; }
   if (e.key === 'n' || e.key === 'N') openTaskModal();
   if (e.key === '1') navigate('today');
   if (e.key === '2') navigate('tasks');
